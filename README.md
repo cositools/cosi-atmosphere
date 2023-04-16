@@ -12,11 +12,11 @@ Calculates atmospheric response and background for MeV gamma rays. The library i
 ## Quickstart Guide <br /> 
 <pre>
 1. Clone repository:
-  - git clone https://github.com/ckarwin/atmospheric_gammas.git
+  $ git clone https://github.com/ckarwin/atmospheric_gammas.git
 
 2. Install with pip:
-  - cd atmosheric_gammas
-  - pip install -e .
+  $ cd atmosheric_gammas
+  $ pip install -e .
      
 3. See examples directory for calculating the atmospheric response using a rectangular mass model of the atmosphere.  
 
