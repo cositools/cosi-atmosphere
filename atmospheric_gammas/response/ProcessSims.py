@@ -11,7 +11,7 @@ from scipy import integrate
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.convolution import convolve, Gaussian2DKernel
-import ProcessSims
+from  atmospheric_gammas.response import ProcessSims
 import astropy
 
 class Process:
