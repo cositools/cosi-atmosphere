@@ -1,8 +1,0 @@
-Metadata-Version: 2.1
-Name: atmospheric-gammas
-Version: dev
-Summary: Calculates atmospheric response and background for             MeV gamma rays.
-Home-page: https://github.com/ckarwin/atmospheric_gammas.git
-Author: Chris Karwin
-Author-email: christopher.m.karwin@nasa.gov
-License-File: LICENSE
