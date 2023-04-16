@@ -18,7 +18,7 @@ Calculates atmospheric response and background for MeV gamma rays. The library i
   - cd atmosheric_gammas
   - pip install -e .
      
-3. See examples directory for calculating the atmospheric resonse using a rectangular mass model of the atmosphere.  
+3. See examples directory for calculating the atmospheric response using a rectangular mass model of the atmosphere.  
 
 </pre>
 
