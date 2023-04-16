@@ -1,2 +1,1 @@
-eggs/
-.eggs/
+*.egg-info/

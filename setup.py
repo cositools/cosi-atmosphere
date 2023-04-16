@@ -9,6 +9,5 @@ setup(
     author='Chris Karwin',
     author_email='christopher.m.karwin@nasa.gov',
     packages=find_packages(),
-    description = "Calculates atmospheric response and background for \
-            MeV gamma rays.",
+    description = "Calculates atmospheric response and background for MeV gamma rays.",
 )
