@@ -4,7 +4,7 @@
 This module requires the MEGAlib code, available [here](http://megalibtoolkit.com/home.html). Among other things, MEGAlib simulates the emission from any (MeV) gamma-ray source, simulates the instrument response, performs the event reconstruction, and performs the high-level data analysis. See the above link for more details regarding the MEGAlib package.   
 
 ## Getting Help <br />
-For any help/problems with running the data challenge module please contact Chris Karwin at: christopher.m.karwin@nasa.gov. 
+For any help/problems with running the atmosphere module please contact Chris Karwin at: christopher.m.karwin@nasa.gov. 
 
 ## Purpose <br />
 Calculates atmospheric response and background for MeV gamma rays. This library is still under initial development.   
