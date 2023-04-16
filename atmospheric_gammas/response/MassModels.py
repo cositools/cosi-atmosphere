@@ -18,8 +18,7 @@ class MakeMassModels:
         
         atmosphere_file: input file describing the atmosphere,
         calculated with Community Coordinated Modeling Center, 
-        NRLMSISE-00 atmospheric model.
-        
+        NRLMSISE-00 atmospheric model. 
         """
 
         # Get test directory:
