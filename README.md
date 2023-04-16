@@ -7,7 +7,7 @@ This module requires the MEGAlib code, available [here](http://megalibtoolkit.co
 For any help/problems with running the data challenge module please contact Chris Karwin at: christopher.m.karwin@nasa.gov. 
 
 ## Purpose <br />
-Calculates atmospheric response and background for MeV gamma rays. The library is still under initial development.   
+Calculates atmospheric response and background for MeV gamma rays. This library is still under initial development.   
 
 ## Quickstart Guide <br /> 
 <pre>
