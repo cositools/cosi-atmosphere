@@ -1,0 +1,12 @@
+LICENSE
+README.md
+setup.py
+atmospheric_gammas/__init__.py
+atmospheric_gammas.egg-info/PKG-INFO
+atmospheric_gammas.egg-info/SOURCES.txt
+atmospheric_gammas.egg-info/dependency_links.txt
+atmospheric_gammas.egg-info/top_level.txt
+atmospheric_gammas/response/MassModels.py
+atmospheric_gammas/response/ProcessSims.py
+atmospheric_gammas/response/RunSims.py
+atmospheric_gammas/response/__init__.py
