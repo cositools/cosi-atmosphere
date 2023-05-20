@@ -9,35 +9,32 @@ import os
 
 class MakeMassModels:
 
-    def __init__(self, atmosphere_file):
+    def __init__(self, atmosphere_file, kwargs={}):
 
         """
         Generates a mass model based on input atmospheric data.
 
         Inputs:
         
-        atmosphere_file: input file describing the atmosphere,
-        calculated with Community Coordinated Modeling Center, 
-        NRLMSISE-00 atmospheric model. 
+        atmosphere_file: input file describing the atmosphere, 
+        calculated with Atmospheric_profile class, based on NRLMSIS. 
+        
+        kwargs: pass any kwargs to pandas read_csv method. 
         """
-
+        
         # Get test directory:
         path_prefix = os.path.split(MassModels.__file__)[0]
         self.test_dir = os.path.join(path_prefix,"test_files")
         
-        # Read in atmosphere model:
-        df = pd.read_csv(atmosphere_file,delim_whitespace=True,skiprows=39,\
-                names=("height[km]","O[cm-3]","N2[cm-3]","O2[cm-3]","Mass_density[g/cm3]",\
-                "Temperature_neutral[K]","Temperature_exospheric[K]","He[cm-3]","Ar[cm-3]",\
-                "H[cm-3]","N[cm-3]","Anomalous_Oxygen[cm-3]"))
+        df = pd.read_csv(atmosphere_file, delim_whitespace=True, **kwargs)
 
-        self.height = np.array(df["height[km]"])
-        self.density = np.array(df["Mass_density[g/cm3]"])
-        self.H = np.array(df["H[cm-3]"]) 
-        self.He = np.array(df["He[cm-3]"])
-        self.N = np.array(df["N[cm-3]"]) + 2*np.array(df["N2[cm-3]"]) 
-        self.O = np.array(df["O[cm-3]"]) + 2*np.array(df["O2[cm-3]"])
-        self.Ar = np.array(df["Ar[cm-3]"]) 
+        self.height = np.array(df["altitude[km]"])
+        self.density = np.array(df["mass_density[kg/m3]"])
+        self.H = np.array(df["H[m-3]"]) 
+        self.He = np.array(df["He[m-3]"])
+        self.N = np.array(df["N[m-3]"]) + 2*np.array(df["N2[m-3]"]) 
+        self.O = np.array(df["O[m-3]"]) + 2*np.array(df["O2[m-3]"])
+        self.Ar = np.array(df["Ar[m-3]"]) 
 
         # Normalize so that we can convert to ints (as required by geomega):
         # Also scale by 1e6 in order to convert to int.
@@ -94,15 +91,15 @@ class MakeMassModels:
         ax1.loglog(self.height,self.N,label="N (N + N2)")
         ax1.loglog(self.height,self.O,label="O (O + O2)")
         ax1.loglog(self.height,self.Ar,label="Ar")
-        ax1.set_ylabel("Number Density [$\mathrm{cm^{-3}}$]",fontsize=12)
-        ax1.set_ylim(ymin=1e5,ymax=1e20)
+        ax1.set_ylabel("Number Density [$\mathrm{m^{-3}}$]",fontsize=12)
+        ax1.set_ylim(ymin=1e11,ymax=1e26)
         ax1.set_xlabel("Altitude [km]", fontsize=12)
         ax1.legend(loc=3,frameon=False)
         ax1.grid(ls=":",color="grey")
         ax1.tick_params(axis="both",labelsize=12)
 
         ax2.loglog(self.height,self.density,ls="--",lw=3,color="black",label="mass density")
-        ax2.set_ylabel("Mass Density [$\mathrm{g \ cm^{-3}}$]",fontsize=12)
+        ax2.set_ylabel("Mass Density [$\mathrm{kg \ m^{-3}}$]",fontsize=12)
         ax2.legend(loc=1,frameon=False)
         ax2.tick_params(axis="y",labelsize=12)
 
