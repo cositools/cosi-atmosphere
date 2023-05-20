@@ -166,8 +166,8 @@ class MakeMassModels:
         There is a very tiny surrounding sphere placed at the
         top of the atmoshpere, although this is not used for a 
         unifrom beam source. The watched volume is the entire 
-        slab between 33 - 34 km. The source is a narrow beam with
-        radius = 1cm. 
+        slab starting at the specified watch_height. The source 
+        is a narrow beam with radius = 1cm. 
 
         Inputs:
         watch_height: altitude for watched volume in km. 
