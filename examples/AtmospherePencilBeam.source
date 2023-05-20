@@ -11,7 +11,7 @@ PhysicsListEMActivateFluorescence    false
 StoreCalibrated                      true
 StoreSimulationInfo                  init-only
 StoreSimulationInfoIonization        false
-StoreSimulationInfoWatchedVolumes    TestSphere
+StoreSimulationInfoWatchedVolumes    TestVolume
 StoreOnlyTriggeredEvents             false
 DiscretizeHits                       true
 

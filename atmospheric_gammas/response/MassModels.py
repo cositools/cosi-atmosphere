@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import random
 import math
 from atmospheric_gammas.response import MassModels
-import os
+import os,sys 
 
 class MakeMassModels:
 
@@ -156,7 +156,7 @@ class MakeMassModels:
 
         return
 
-    def rectangular_model(self):
+    def rectangular_model(self,watch_height):
         
         """
         Original rectangular mass model by AZ, 
@@ -168,7 +168,26 @@ class MakeMassModels:
         unifrom beam source. The watched volume is the entire 
         slab between 33 - 34 km. The source is a narrow beam with
         radius = 1cm. 
+
+        Inputs:
+        watch_height: altitude for watched volume in km. 
+            The actual volume will be a box starting at the 
+            specified value, with a height equal to the spacing
+            specified in the atmospheric model. 
         """
+
+        # Get half-height from atmospheric profile.
+        # Note: Atmospheric profile must start from 0 km. 
+        max_height = np.amax(self.height)
+        n_values = len(self.height) - 1 # -1 since altitude starts at zero
+        half_height = 0.5 * (max_height/n_values) * 1e5 # cm 
+
+        # Get index for watched volume:
+        watch_index = np.argwhere(self.height==watch_height)[0]
+        watch_index = int(watch_index)
+
+        print("Using half-height [cm]: " + str(half_height))
+        print("Watch index: " + str(watch_index))
 
         # Make mass model:
         f = open("atmosphere.geo","w")
@@ -193,13 +212,12 @@ class MakeMassModels:
         f.write("Include $(MEGALIB)/resource/examples/geomega/materials/Materials.geo\n\n")
 
         # write atmoshpere slices:
-        half_height = 5e4 # box
-
         for i in range(0,len(self.H_normed)-1):
 
             # Material:
-            # Note: using density at i-1, 
-            # but might be better to use mean of slab.
+            # Note: using density at i-1: 
+            # This should be fine as long as the atmospheric model
+            # has small altitude bins.
             f.write("Material MaterialSlice_%s_%s\n" %(str(i),str(i+1)))
             f.write("MaterialSlice_%s_%s.Density %s\n" %(str(i),str(i+1),str(self.density[i])))
             if self.H_normed[i] != 0:
@@ -213,18 +231,18 @@ class MakeMassModels:
             z_slab = 2*(i)*half_height + half_height
             f.write("Volume VolumeSlice_%s_%s\n" %(str(i),str(i+1)))
             f.write("VolumeSlice_%s_%s.Material MaterialSlice_%s_%s\n" %(str(i),str(i+1),str(i),str(i+1)))
-            f.write("VolumeSlice_%s_%s.Shape BOX 51200000.000000 51200000.000000 50000.000000\n" %(str(i),str(i+1)))
+            f.write("VolumeSlice_%s_%s.Shape BOX 51200000.000000 51200000.000000 %s\n" %(str(i),str(i+1),str(half_height)))
             f.write("VolumeSlice_%s_%s.Visibility  1\n" %(str(i),str(i+1)))
             f.write("VolumeSlice_%s_%s.Position 0 0 %s\n" %(str(i),str(i+1),str(z_slab)))
             f.write("VolumeSlice_%s_%s.Mother World\n\n" %(str(i),str(i+1)))
 
-        # Write TestSphere:
-        f.write("Volume TestSphere\n")
-        f.write("TestSphere.Material MaterialSlice_33_34\n")
-        f.write("TestSphere.Shape BOX 51200000.000000 51200000.000000 50000.000000\n")
+        # Write TestVolume:
+        f.write("Volume TestVolume\n")
+        f.write("TestSphere.Material MaterialSlice_%s_%s\n" %(str(watch_index),str(watch_index+1)))
+        f.write("TestSphere.Shape BOX 51200000.000000 51200000.000000 %s\n" %str(half_height))
         f.write("TestSphere.Visibility 1\n")
         f.write("TestSphere.Position 0 0 0\n")
-        f.write("TestSphere.Mother VolumeSlice_33_34\n")
+        f.write("TestSphere.Mother VolumeSlice_%s_%s\n" %(str(watch_index),str(watch_index+1)))
          
         f.close()
 
