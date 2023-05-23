@@ -238,11 +238,11 @@ class MakeMassModels:
 
         # Write TestVolume:
         f.write("Volume TestVolume\n")
-        f.write("TestSphere.Material MaterialSlice_%s_%s\n" %(str(watch_index),str(watch_index+1)))
-        f.write("TestSphere.Shape BOX 51200000.000000 51200000.000000 %s\n" %str(half_height))
-        f.write("TestSphere.Visibility 1\n")
-        f.write("TestSphere.Position 0 0 0\n")
-        f.write("TestSphere.Mother VolumeSlice_%s_%s\n" %(str(watch_index),str(watch_index+1)))
+        f.write("TestVolume.Material MaterialSlice_%s_%s\n" %(str(watch_index),str(watch_index+1)))
+        f.write("TestVolume.Shape BOX 51200000.000000 51200000.000000 %s\n" %str(half_height))
+        f.write("TestVolume.Visibility 1\n")
+        f.write("TestVolume.Position 0 0 0\n")
+        f.write("TestVolume.Mother VolumeSlice_%s_%s\n" %(str(watch_index),str(watch_index+1)))
          
         f.close()
 
