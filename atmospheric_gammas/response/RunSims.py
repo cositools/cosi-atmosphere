@@ -21,7 +21,7 @@ class Simulate:
             os.system("cosima -s %s %s" %(seed,source_file))
 
         if seed == 0:
-            os.system("cosima -s %s" %(source_file))
+            os.system("cosima %s" %(source_file))
 
         return
 

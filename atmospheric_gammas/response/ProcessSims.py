@@ -13,6 +13,9 @@ import astropy.units as u
 from astropy.convolution import convolve, Gaussian2DKernel
 from  atmospheric_gammas.response import ProcessSims
 import astropy
+import healpy as hp
+from healpy.newvisufunc import projview, newprojplot
+import matplotlib.colors as colors
 
 class Process:
 
@@ -71,10 +74,16 @@ class Process:
         # Define vector array:
         v = np.array([self.xdm,self.ydm,self.zdm]).T
     
-        # Get spherical coordinates:
+        # Get spherical coordinates for position:
         self.sp_coords = astropy.coordinates.cartesian_to_spherical(self.xm,self.ym,self.zm)
-        self.lat = self.sp_coords[1] * (180/np.pi) # deg
-        self.lon = self.sp_coords[2] * (180/np.pi) # deg
+        self.lat = self.sp_coords[1].deg # deg
+        self.lon = self.sp_coords[2].deg # deg
+
+        # Get spherical coordinates for direction:
+        # Multipy by -1 to backproject onto the sky and rotate into detector coordinates
+        self.sp_coords_dir = astropy.coordinates.cartesian_to_spherical(self.xdm,self.ydm,self.zdm)
+        self.lat_dir = 90 - (-1)*self.sp_coords_dir[1].deg  # deg
+        self.lon_dir = self.sp_coords_dir[2].deg - 180 # deg
 
         # Define surface normal:
         if geo == "spherical":
@@ -132,6 +141,7 @@ class Process:
         # which is undefined in arccos. 
         arg = np.round(arg,4)
         angle = np.arccos(arg)
+        
         return angle
 
     def bin_sim(self, elow=10, ehigh=10000, num_ebins=24,\
@@ -186,6 +196,16 @@ class Process:
                 labels=["Em [keV]", "rm [km]", "xm [cm]", "ym [cm]", "theta_prime [deg]"])
         self.measured_photons.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle)
 
+        # Make weighted histogram
+        # Events are weigthed by the cos of the incident angle. 
+        # This is a geometric correction factor to account for simulating 
+        # a disk collection area as opposed to spherical region;
+        # however, it is not needed for the infinite planar collection area. 
+        self.measured_photons_weighted = Histogram([self.energy_bin_edges, self.radial_bins, \
+                self.xym_bins, self.xym_bins, self.incident_ang_bins],\
+                labels=["Em [keV]", "rm [km]", "xm [cm]", "ym [cm]", "theta_prime [deg]"])
+        self.measured_photons_weighted.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle, weight=1.0/np.cos(np.deg2rad(self.incident_angle)))
+
         # Get binning info:
         self.get_binning_info()
 
@@ -219,7 +239,7 @@ class Process:
 
     def make_scattering_plots(self, starting_pos=True, measured_pos=True, \
             spec_i=True, radial_dist=True, theta_prime = True, \
-            theta_prime_em = True, rad_em = True, rad_ei=True):
+            theta_prime_em = True, rad_em = True, rad_ei = True, weighted = True):
 
         """
         Visualize the photon scattering.
@@ -321,8 +341,53 @@ class Process:
         if theta_prime_em == True:
             self.measured_photons.project(["Em [keV]","theta_prime [deg]"]).plot(norm=mpl.colors.LogNorm())
             plt.xscale("log")
-            #plt.yscale("log")
+            plt.xlim(1e2,1e4)
+            plt.ylim(0,100)
             plt.savefig("thetaprime_energy_m_dist.png")
+            plt.show()
+            plt.close()
+
+        # Plots for histograms weighted by incident angle:
+        if weighted == True:
+            
+            # Plot theta prime distribution versus measured energy:
+            self.measured_photons_weighted.project(["Em [keV]","theta_prime [deg]"]).plot(norm=mpl.colors.LogNorm())
+            plt.xscale("log")
+            plt.xlim(1e2,1e4)
+            plt.ylim(0,100)
+            plt.savefig("weighted_thetaprime_energy_m_dist.png")
+            plt.show()
+            plt.close()
+
+            # Calculate percent diff b/n weighted and un-weighted
+            uw = np.array(self.measured_photons.project(["Em [keV]","theta_prime [deg]"]))
+            w = np.array(self.measured_photons_weighted.project(["Em [keV]","theta_prime [deg]"]))
+            p_diff = (w - uw) / uw
+            p_diff[np.isnan(p_diff)] = 1e-12
+
+            # Plot percent diff:
+            fig = plt.figure()
+            ax = plt.gca()
+            img = ax.pcolormesh(self.energy_bin_edges, self.incident_ang_bins, p_diff.T, \
+                    cmap="viridis", norm=colors.LogNorm(vmin=1e-2, vmax=10))
+            ax.set_xscale('log')
+            cbar = plt.colorbar(img,fraction=0.045)
+            cbar.set_label("percent diff")
+            plt.xlabel("Em [keV]")
+            plt.ylabel("theta_prime [deg]")
+            plt.xlim(1e2,1e4)
+            plt.ylim(0,90)
+            plt.savefig("weighted_p_diff.png")
+            plt.show()
+            plt.close()
+
+            # Plot distribution of theta prime for measured photons:
+            self.measured_photons_weighted.project("theta_prime [deg]").plot()
+            plt.yscale("log")
+            plt.ylabel("counts")
+            plt.xlim(0,100)
+            plt.grid(ls="--",color="grey",alpha=0.3)
+            plt.savefig("weighted_theta_prime_dist.png")
             plt.show()
             plt.close()
 
@@ -346,6 +411,78 @@ class Process:
             plt.savefig("radial_energy_i_dist.png")
             plt.show()
             plt.close()
+
+        return
+
+    def _compton_rainbow(self):
+
+        '''Trying to make Albert's Compton rainbow.'''
+
+        # Compton rainbow (using healpy):
+            
+        # Photons b/n 100 - 105 keV
+        idi_array = np.array(self.idi)
+        idm_array = np.array(self.idm)
+        keep_index = np.isin(idi_array,idm_array)
+        ei_array = np.array(self.ei)[keep_index]
+        em_array = np.array(self.em)
+        lon_array = np.array(self.lon_dir)
+        lat_array = np.array(self.lat_dir)
+        incident_array = np.array(self.incident_angle) * (np.pi/180) # radians
+        weights = np.cos(incident_array)
+
+        # Select measured energies:
+        src_index = (ei_array >= 2000) & (ei_array < 10000)
+        this_index = (em_array >= 1000) & (em_array < 1500) & (src_index)
+
+        # Define map resolution:
+        nside = 8
+        print("Approximate resolution at NSIDE {} is {:.2} deg".format(nside, hp.nside2resol(nside, arcmin=True) / 60))
+        
+        # Make healpix map:
+        npix = hp.nside2npix(nside)
+        pixs = hp.ang2pix(nside,lon_array[this_index],lat_array[this_index],lonlat=True)
+        unique, unique_counts = np.unique(pixs, return_counts=True)
+        m = np.zeros(npix)
+        m[unique] = unique_counts
+
+        # Get weights:
+        angs = hp.pix2ang(nside,unique,lonlat=True)
+       
+        # Option 0 for plotting:
+        src_index0 = (ei_array >= 1000) & (ei_array < 1500)
+        this_index0 = (em_array >= 1000) & (em_array < 1500) & (src_index0)
+        src_index1 = (ei_array >= 1500) & (ei_array < 2000)
+        this_index1 = (em_array >= 1000) & (em_array < 1500) & (src_index1)
+        src_index2 = (ei_array >= 2000) & (ei_array < 10000)
+        this_index2 = (em_array >= 1000) & (em_array < 1500) & (src_index2)
+        
+        
+        plt.hist2d(lon_array[this_index2],lat_array[this_index2],alpha=1,bins=50,vmax=0.5,cmap="Greens")
+        plt.hist2d(lon_array[this_index1],lat_array[this_index1],alpha=0.7,bins=50,cmap="Reds")
+        plt.hist2d(lon_array[this_index0],lat_array[this_index0],alpha=0.4,cmin=0.5,vmax=0.9,bins=50,cmap="Blues")
+        plt.show()
+        sys.exit()
+
+        # Option 1 for plotting:
+        #hp.mollview(m, title="Compton Rainbow", unit="counts", norm="hist", cmap="inferno")
+        
+        # Option 2 for plotting:
+        projview(m,
+        coord=["C"],
+        graticule=True,
+        graticule_labels=True,
+        unit="counts",
+        xlabel="Longitude",
+        ylabel="Elevation",
+        max=np.amax(unique_counts)/3.0,
+        norm="hist",
+        cmap="inferno",
+        cb_orientation="horizontal",
+        projection_type="cart")
+    
+        plt.show()
+        sys.exit()
 
         return
 
@@ -535,9 +672,12 @@ class Process:
                 labels=["Ei [keV]", "Em [keV]", "theta_prime [deg]"])
         transmitted_events.fill(self.ei[transmitted_index], em_watch, ia_watch)
         
+        # For testing only:
+        #transmitted_events.fill(self.ei[transmitted_index], em_watch, ia_watch,  weight=1.0/np.cos(np.deg2rad(ia_watch)))
+        
         # Save response matrix:
         if write_hist == True:
-            transmitted_events.write('atm_responsg.hdf5', overwrite=True)
+            transmitted_events.write('atm_response.hdf5', overwrite=True)
         
         # Project onto em, ei:
         self.edisp_array = np.array(transmitted_events.project(["Em [keV]", "Ei [keV]"]))

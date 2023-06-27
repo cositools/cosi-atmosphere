@@ -18,7 +18,7 @@ import numpy as np
 #instance.plot_atmosphere()
 #instance.get_cart_vectors(angle, altitude)
 #instance.rectangular_model(33)
-#instance.spherical_model()
+#instance.spherical_model(33)
 
 # Run sim:
 #instance = Simulate()
