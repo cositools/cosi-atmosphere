@@ -21,11 +21,6 @@ Run SpaceSim
 SpaceSim.FileName         Atmosphere_Isotropic
 SpaceSim.Triggers         5000000
 
-# Attention: Concerning the lower energy band:
-# The analysis is planned to be performed above 1 MeV.
-# Therfore you set the lower energy limit for the simulation, well below this limit, 
-# to avoid problems due to energy resolution limitations
-
 SpaceSim.Source Beam
 Beam.ParticleType           1
 Beam.Beam                   FarFieldIsotropic
