@@ -9,5 +9,5 @@ setup(
     author='COSI Team',
     author_email='christopher.m.karwin@nasa.gov',
     packages=find_packages(),
-    description = "Tools for calculating atmospheric response and background for gamma rays"
+    description = "Tools for calculating atmospheric response and background"
 )
