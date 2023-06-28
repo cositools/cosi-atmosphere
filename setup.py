@@ -3,11 +3,11 @@ from setuptools import setup, find_packages
 
 # Setup:
 setup(
-    name='atmospheric_gammas',
+    name='cosi_atmosphere',
     version="dev",
-    url='https://github.com/ckarwin/atmospheric_gammas.git',
-    author='Chris Karwin',
+    url='https://github.com/cositools/cosi-atmosphere.git',
+    author='COSI Team',
     author_email='christopher.m.karwin@nasa.gov',
     packages=find_packages(),
-    description = "Calculates atmospheric response and background for MeV gamma rays."
+    description = "Tools for calculating atmospheric response and background for gamma rays"
 )
