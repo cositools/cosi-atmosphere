@@ -7,7 +7,7 @@ This module requires the MEGAlib code, available [here](http://megalibtoolkit.co
 For any help/problems with running the atmoshphere module please contact Chris Karwin at: christopher.m.karwin@nasa.gov. 
 
 ## Purpose <br />
-Calculates atmospheric response and background. This library is still under initial development.   
+Tools for calculating atmospheric response and background. This library is still under initial development.   
 
 ## Quickstart Guide <br /> 
 <pre>
