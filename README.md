@@ -12,12 +12,12 @@ Tools for calculating atmospheric response and background. This library is still
 ## Quickstart Guide <br /> 
 <pre>
 1. Clone repository:
-  $ git clone https://github.com/ckarwin/atmospheric_gammas.git
+  $ git clone https://github.com/cositools/cosi-atmosphere.git
 
 2. Install with pip:
-  $ cd atmosheric_gammas
+  $ cd cosi-atmosphere
   $ pip install -e .
      
-3. See examples directory for calculating the atmospheric response using a rectangular mass model of the atmosphere.  
+3. See examples directory for calculating the atmospheric response using a rectangular or spherical mass model of the atmosphere.  
 
 </pre>
