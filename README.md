@@ -1,4 +1,4 @@
-# atmospheric_gammas
+# cosi_atmosphere
 
 ## Required Software <br />
 This module requires the MEGAlib code, available [here](http://megalibtoolkit.com/home.html). Among other things, MEGAlib simulates the emission from any (MeV) gamma-ray source, simulates the instrument response, performs the event reconstruction, and performs the high-level data analysis. See the above link for more details regarding the MEGAlib package.   
@@ -7,7 +7,7 @@ This module requires the MEGAlib code, available [here](http://megalibtoolkit.co
 For any help/problems with running the atmoshphere module please contact Chris Karwin at: christopher.m.karwin@nasa.gov. 
 
 ## Purpose <br />
-Calculates atmospheric response and background for MeV gamma rays. This library is still under initial development.   
+Calculates atmospheric response and background. This library is still under initial development.   
 
 ## Quickstart Guide <br /> 
 <pre>

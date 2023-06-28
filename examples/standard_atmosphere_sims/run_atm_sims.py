@@ -1,8 +1,8 @@
 # Imports:
-from atmospheric_gammas.response.AtmosphericProfile import Atmosphere
-from atmospheric_gammas.response.MassModels import MakeMassModels
-from atmospheric_gammas.response.RunSims import Simulate 
-from atmospheric_gammas.response.ProcessSims import Process
+from cosi_atmosphere.response.AtmosphericProfile import Atmosphere
+from cosi_atmosphere.response.MassModels import MakeMassModels
+from cosi_atmosphere.response.RunSims import Simulate 
+from cosi_atmosphere.response.ProcessSims import Process
 import numpy as np
 
 # Get Atmospheric model:
