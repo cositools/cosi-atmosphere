@@ -11,7 +11,7 @@ from scipy import integrate
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.convolution import convolve, Gaussian2DKernel
-from  cosi_response.response import ProcessSims
+from  cosi_atmosphere.response import ProcessSims
 import astropy
 import healpy as hp
 from healpy.newvisufunc import projview, newprojplot
