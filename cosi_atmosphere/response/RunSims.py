@@ -4,7 +4,7 @@ import os
 
 class Simulate:
  
-    def run_sim(self, source_file, seed=0):
+    def run_sim(self, source_file, seed=0, verbosity=1):
 
         """
         Run atmospheric sims.
@@ -18,10 +18,10 @@ class Simulate:
         """
 
         if seed != 0:
-            os.system("cosima -s %s %s" %(seed,source_file))
+            os.system("cosima -v %s -s %s %s" %(verbosity,seed,source_file))
 
         if seed == 0:
-            os.system("cosima %s" %(source_file))
+            os.system("cosima -v %s %s" %(verbosity,source_file))
 
         return
 
@@ -64,10 +64,6 @@ class Simulate:
      
             this_line = f.readline().strip().split()
             i = i + 1
-    
-            print()
-            print("reading line %s" %str(i))
-            print()
 
             if this_line:
         
@@ -139,5 +135,3 @@ class Simulate:
         df.to_csv("event_list.dat",float_format='%10.9e',index=False,sep="\t",\
                 columns=["id","em[keV]","xm[cm]","ym[cm]","zm[cm]",
                     "xdm[cm]","ydm[cm]","zdm[cm]"])
-
-        return

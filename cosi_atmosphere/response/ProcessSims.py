@@ -239,7 +239,7 @@ class Process:
 
     def make_scattering_plots(self, starting_pos=True, measured_pos=True, \
             spec_i=True, radial_dist=True, theta_prime = True, \
-            theta_prime_em = True, rad_em = True, rad_ei = True, weighted = True):
+            theta_prime_em = True, rad_em = True, rad_ei = True, weighted = False):
 
         """
         Visualize the photon scattering.

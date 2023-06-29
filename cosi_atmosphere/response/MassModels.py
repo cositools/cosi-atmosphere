@@ -76,11 +76,14 @@ class MakeMassModels:
 
         return
 
-    def plot_atmosphere(self):
+    def plot_atmosphere(self, show_comparison=False):
 
         """
-        Plot atmosphere model. Also compare normalized atmospheric 
-        components to original calculation from AZ.
+        Plot atmosphere model. 
+        
+        Inputs:
+        show_comparison (optional) If true, compare normalized atmospheric 
+        components to original calculation from AZ. Default is False.
         """
 
         # plot elements:
@@ -150,8 +153,9 @@ class MakeMassModels:
         plt.loglog(height_list,Ar_list,ls="",marker="o",zorder=0)
 
         ax1.set_xlabel("Altitude [km]", fontsize=12)
-        plt.savefig("particle_profile_normed.pdf")
-        plt.show()
+        if show_comparison == True:
+            plt.savefig("particle_profile_normed.pdf")
+            plt.show()
         plt.close()
 
         return
