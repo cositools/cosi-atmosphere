@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import math
-from atmospheric_gammas.response import MassModels
+from cosi_atmosphere.response import MassModels
 import os,sys 
 
 class MakeMassModels:
