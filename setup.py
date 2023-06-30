@@ -9,7 +9,6 @@ setup(
     author='COSI Team',
     author_email='christopher.m.karwin@nasa.gov',
     packages=find_packages(),
-    install_requires = ['histpy @ git+https://gitlab.com/burstcube/histpy.git@develop',
-                        'pandas','healpy','pymsis'],
+    install_requires = ['histpy==1.0.2','pandas','healpy','pymsis'],
     description = 'Tools for calculating atmospheric response and background'
 )
