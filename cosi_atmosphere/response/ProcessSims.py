@@ -196,7 +196,7 @@ class Process:
                 labels=["Em [keV]", "rm [km]", "xm [cm]", "ym [cm]", "theta_prime [deg]"])
         self.measured_photons.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle)
 
-        # Make weighted histogram
+        # Make weighted histogram.
         # Events are weigthed by the cos of the incident angle. 
         # This is a geometric correction factor to account for simulating 
         # a disk collection area as opposed to spherical region;
@@ -573,7 +573,11 @@ class Process:
         df = pd.DataFrame(data = d, columns = ["energy[keV]","TP"])
         df.to_csv("tp_official.dat",sep="\t",index=False)
 
-        return tp_energy, tp_array[0]
+        # Get index for theta of off-axis angle:
+        theta_list = np.array(theta_list)
+        return_index = np.where(theta_list == self.theta)[0][0]
+        
+        return tp_energy, tp_array[return_index]
 
     def get_total_edisp_matrix(self, show_sanity_checks=False, make_plots=True):
 
@@ -728,7 +732,7 @@ class Process:
         plt.semilogx(self.emean, self.tp_total, ls="--", label="Total")
         plt.semilogx(self.emean, self.tp_beam, ls="-", label="Unscattered")
         plt.semilogx(self.emean, self.tp_scattered, ls=":", label="Scattered")
-        plt.semilogx(e_official, tp_official, ls="-.", label="Official")
+        plt.semilogx(e_official, tp_official, ls="-.", label="Official (33 km)")
         plt.xlabel("Ei [keV]")
         plt.ylabel("Transmission Probability")
         plt.ylim(0,1)
