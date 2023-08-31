@@ -1,8 +1,0 @@
-Metadata-Version: 2.1
-Name: cosi-atmosphere
-Version: 0.0.1
-Summary: Tools for calculating atmospheric response and background
-Home-page: https://github.com/cositools/cosi-atmosphere.git
-Author: COSI Team
-Author-email: christopher.m.karwin@nasa.gov
-License-File: LICENSE
