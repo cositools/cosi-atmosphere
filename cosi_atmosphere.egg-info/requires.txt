@@ -1,0 +1,4 @@
+histpy==1.0.2
+pandas
+healpy
+pymsis
