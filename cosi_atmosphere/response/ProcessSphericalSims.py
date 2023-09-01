@@ -22,7 +22,7 @@ import h5py
 
 class Process(ProcessSims.Process):
 
-    def __init__(self, theta_bin, all_events_file="all_thrown_events.dat", \
+    def __init__(self, theta_bin, r_alt, all_events_file="all_thrown_events.dat", \
             measured_events_file="event_list.dat"):
     
         """
@@ -31,6 +31,7 @@ class Process(ProcessSims.Process):
         Inputs:
         
         theta_bin: incident angle bin. 
+        r_alt: altitude of observations in km. 
 
         Note: Both input files are outputs from ParseSims:
         all_events_file: Event file with all thrown events. 
@@ -43,6 +44,9 @@ class Process(ProcessSims.Process):
 
         # Define Earth radius:
         self.r_earth = 6.378e8 * (1e-5) # km
+
+        # Define altitude of observations:
+        self.r_alt = r_alt # km
 
         # Read in all thrown events:
         df = pd.read_csv(all_events_file, delim_whitespace=True)
@@ -97,13 +101,11 @@ class Process(ProcessSims.Process):
         # Get points of intersection:
         o = np.array([self.xi,self.yi,self.zi]).T # cm
         u = np.array([self.xdi,self.ydi,self.zdi]).T # cm
-        r = (self.r_earth + 33.1) * 1e5 # cm
+        r = (self.r_earth + self.r_alt) * 1e5 # cm
         intersecting_points = self.find_projection(o,u,r)
         
         # Define surface normal for initial photons:
         ni = -1*intersecting_points
-
-        # Define surface normal for measured photons:
         nm = -1*np.array([self.xm,self.ym,self.zm]).T
         
         # Get incident angle for initial photons:
@@ -235,7 +237,7 @@ class Process(ProcessSims.Process):
         # Define radial bin edges (ri is normalized relative to Earth's surface):
         rlow = self.r_earth 
         rhigh = self.r_earth + 4000
-        num_rbins = 100
+        num_rbins = 4000
         self.radial_bins = np.linspace(rlow, rhigh, num_rbins)
         
         # Define incident angle bin edges (for initial and measured):
@@ -303,16 +305,19 @@ class Process(ProcessSims.Process):
         self.primary_rsp.fill(self.ei[keep_index], self.em, \
                 self.incident_angle_i[keep_index], self.incident_angle_m)
 
-        # Write primary response to file:
-        self.primary_rsp.write('atm_response.hdf5', overwrite=True)
-        self.starting_photons_rsp.write('atm_response_norm.hdf5', overwrite=True)
-
+        # Write response to file:
+        self.starting_photons.write('starting_photons.hdf5', overwrite=True)
+        self.starting_photons_rsp.write('starting_photons_rsp.hdf5', overwrite=True)
+        self.measured_photons.write('measured_photons.write.hdf5', overwrite=True)
+        self.measured_photons_rsp.write('measured_photons_rsp.hdf5', overwrite=True)
+        self.primary_rsp.write('primary_rsp.hdf5', overwrite=True)
+        
         # Get binning info:
         self.get_binning_info()
 
         return
 
-    def get_binning_info(self, energy_only=False):
+    def get_binning_info(self):
 
         """
         Get info from histogram.
@@ -330,21 +335,23 @@ class Process(ProcessSims.Process):
             emean_list.append(emean)
         self.emean = np.array(emean_list)
         
-        if energy_only == False:
-        
-            # Radius info:
-            self.radial_bin_centers = self.starting_photons.axes["ri [km]"].centers
-            self.radial_bin_widths = self.starting_photons.axes["ri [km]"].widths
+        # Radius info:
+        self.radial_bins = self.starting_photons.axes["ri [km]"].edges
+        self.radial_bin_centers = self.starting_photons.axes["ri [km]"].centers
+        self.radial_bin_widths = self.starting_photons.axes["ri [km]"].widths
 
-            # Projected histograms:
-            self.ei_hist = self.starting_photons.project("Ei [keV]").contents.todense()
-            self.ei_array = np.array(self.ei_hist)
-            self.em_hist = self.measured_photons.project("Em [keV]").contents.todense()
-            self.em_array = np.array(self.em_hist)
-            self.ri_hist = self.starting_photons.project("ri [km]").contents.todense()
-            self.ri_array = np.array(self.ri_hist)
-            self.rm_hist = self.measured_photons.project("rm [km]").contents.todense()
-            self.rm_array = np.array(self.rm_hist)
+        # Incident angle bins:
+        self.incident_ang_bins = self.primary_rsp.axes["theta_i [deg]"].edges
+
+        # Projected histograms:
+        self.ei_hist = self.starting_photons.project("Ei [keV]").contents.todense()
+        self.ei_array = np.array(self.ei_hist)
+        self.em_hist = self.measured_photons.project("Em [keV]").contents.todense()
+        self.em_array = np.array(self.em_hist)
+        self.ri_hist = self.starting_photons.project("ri [km]").contents.todense()
+        self.ri_array = np.array(self.ri_hist)
+        self.rm_hist = self.measured_photons.project("rm [km]").contents.todense()
+        self.rm_array = np.array(self.rm_hist)
         
         return
 
@@ -363,10 +370,10 @@ class Process(ProcessSims.Process):
         pos_proj: 2d projection onto xy-axis of initial positions
         pos_ang_ri: healpix map of initial positions
         pos_ang_di: healpix map of initial directions
-        ri: initial radius relative to Earth's surface
+        ri: initial radius (relative to both Earth center and surrounding sphere disk)
         pos_ang_rm: healpix map of measured positions
         pos_ang_dm: healpix map of measured directions
-        rm: measured radius relative to Earth's surface
+        rm: measured radius with respect to Earth center 
         theta_dist: distributions of incident angle (initial and measured) 
         """
         
@@ -443,17 +450,67 @@ class Process(ProcessSims.Process):
 
         # Distribution of radius for initial photons:
         if ri == True:
-            area = 2*np.pi*(self.radial_bins[:-1])*self.radial_bin_widths
-            plt.plot(self.radial_bin_centers, self.ri_array/(area), color="cornflowerblue")
+           
+            # First calculate relative to surrounding sphere disk:
+
+            # Define rdisk of surrounding sphere disk:
+            rsphere = self.r_earth + 200
+            rdisk = np.sqrt(self.radial_bins**2 - rsphere**2) 
+
+            # Get rdisk width:
+            rdisk_width = []
+            rdisk_mean = []
+            for i in range(0,len(rdisk)-1):
+                rdisk_width.append(rdisk[i+1] - rdisk[i])
+            rdisk_width = np.array(rdisk_width)
+          
+            # Calculate the differential area:
+            # Note: I use the full expression, which includes the
+            # squared differential term. This is often ignored, 
+            # but is important to include for r near 0. 
+            area = 2*np.pi*rdisk[:-1]*rdisk_width + np.pi*(rdisk_width**2)
+            
+            # Calculate rate:
+            rate = self.ri_array/(area)
+            
+            # Get mean rate from disk:
+            good_index = (~np.isnan(rdisk[:-1])) & (rdisk[:-1] < rsphere)
+            good_rate = rate[good_index]
+            self.f_0 = np.mean(good_rate) # mean rate: ph/km2
+            
+            # Plot:
+            plt.plot(rdisk[:-1], rate, color="cornflowerblue")
             plt.axvline(x=self.r_earth, color="darkorange", linestyle=":", label="r_earth")
             plt.axvline(x=self.r_earth+200, color="green", linestyle=":", label="r_earth+200")
-            plt.ylabel("counts/area [$\mathrm{ph \ cm^{-2}}$]")
-            plt.xlabel("ri [km]")
+            plt.ylabel("counts/area [$\mathrm{ph \ km^{-2}}$]", fontsize=14)
+            plt.xlabel("r_disk [km]", fontsize=14)
+            plt.grid(ls="--",color="grey",alpha=0.3)
+            plt.legend(frameon=True,loc=2)
+            plt.ylim(0.05,0.1)
+            plt.xlim(0,rsphere*1.2)
+            plt.xticks(fontsize=12)
+            plt.yticks(fontsize=12)
+            plt.savefig("ri_dist_disk_center.pdf")    
+            plt.show()
+            plt.close()
+            
+            # Plot relative to Earth center:
+            area = 2*np.pi*(self.radial_bins[:-1])*self.radial_bin_widths
+            rate = self.ri_array/(area)
+            
+            # Plot:
+            plt.plot(self.radial_bin_centers, rate, color="cornflowerblue")
+            plt.axvline(x=self.r_earth, color="darkorange", linestyle=":", label="r_earth")
+            plt.axvline(x=self.r_earth+200, color="green", linestyle=":", label="r_earth+200")
+            plt.ylabel("counts/area [$\mathrm{ph \ km^{-2}}$]", fontsize=14)
+            plt.xlabel("ri [km]", fontsize=14)
             plt.grid(ls="--",color="grey",alpha=0.3)
             plt.legend(frameon=True,loc=1)
             plt.xlim(6e3,1e4)
-            plt.ylim(0,1.2*np.amax(self.ri_array/(area)))
-            plt.savefig("ri_dist.png")    
+            plt.ylim(0,1.4*np.amax(self.ri_array/(area)))
+            plt.xticks(fontsize=12)
+            plt.yticks(fontsize=12)
+            plt.savefig("ri_dist_earth_center.pdf")    
             plt.show()
             plt.close()
 
@@ -485,53 +542,104 @@ class Process(ProcessSims.Process):
 
         # Distribution of radius for measured photons:
         if rm == True:
-            area = 2*np.pi*(self.radial_bins[:-1])*self.radial_bin_widths
-            plt.plot(self.radial_bin_centers, self.rm_array/(area), color="cornflowerblue")
+            plt.plot(self.radial_bin_centers, self.rm_array, color="cornflowerblue")
             plt.axvline(x=self.r_earth, color="darkorange", linestyle=":", label="r_earth")
             plt.axvline(x=self.r_earth+200, color="green", linestyle=":", label="r_earth+200")
-            plt.ylabel("counts/area [$\mathrm{ph \ cm^{-2}}$]")
-            plt.xlabel("ri [km]")
+            plt.ylabel("counts [$\mathrm{ph}$]", fontsize=14)
+            plt.xlabel("rm [km]", fontsize=14)
             plt.grid(ls="--",color="grey",alpha=0.3)
             plt.legend(frameon=True,loc=1)
-            plt.xlim(6e3,1e4)
-            plt.ylim(0,1.2*np.amax(self.ri_array/(area)))
-            plt.savefig("rm_dist.png")    
+            plt.xlim(6.1e3,6.9e3)
+            plt.xticks(fontsize=12)
+            plt.yticks(fontsize=12)
+            plt.savefig("rm_dist.pdf")    
             plt.show()
             plt.close()
 
         # Plot theta_distributions:
         if theta_dist == True:
+
+            # Average flux needs to be calculated from ri.
+            # Make sure that this has been done:
+            try: 
+                self.f_0
+            except: 
+                print("Average flux is not calculated.")
+                print("You must set ri = True")
+                sys.exit()
+
+            # Solution for the flux of a constant field
+            # through a hemisphere. 
+            def flux(theta):
+                
+                R = self.r_earth + self.r_alt # km
+                f_0 = self.f_0 # mean rate from disk in ph/km^2
+                c = 2*np.pi*(R**2)*f_0
+                
+                print("calculation of uniform flux through hemisphere:")
+                print("radius of hemisphere [km]: " + str(R))
+                print("mean rate from surrounding sphere disk [ph/km^2]: " + str(f_0))
+                
+                return c*np.sin(theta)*np.cos(theta)
             
+            analytical_soln = flux(self.incident_ang_bins*(np.pi/180))
+            
+            # Need to compare the analytical solution to counts/angle in steradians:
+            d_theta = 4 * (np.pi/180)
+
+            # Plot distributions:
             theta_i = np.array(self.starting_photons_rsp.project("theta_i [deg]").contents.todense())
             theta_m = np.array(self.measured_photons_rsp.project("theta_m [deg]").contents.todense())
-            plt.stairs(theta_i,self.incident_ang_bins,label="initial",ls="-")
-            plt.stairs(theta_m,self.incident_ang_bins,label="measured",ls="--")
+            plt.stairs(theta_i/d_theta,self.incident_ang_bins,label="initial",ls="-",lw=2)
+            plt.stairs(theta_m/d_theta,self.incident_ang_bins,label="measured",ls="--",lw=2)
+            plt.plot(self.incident_ang_bins,analytical_soln,label="analytical",ls=":",lw=3,color="grey",zorder=0,alpha=0.8)
             plt.yscale("log")
-            plt.ylabel("counts", fontsize=14)
+            plt.ylabel(r"$\Delta \Phi / \Delta \theta$  [$\mathrm{ph \ rad^{-1}}$]", fontsize=14)
             plt.xlabel(r"$\theta$", fontsize=14)
-            #plt.ylim(1e3,1e6)
+            plt.ylim(1e4,1e8)
             plt.xlim(0,100)
             plt.xticks(fontsize=12)
             plt.yticks(fontsize=12)
             plt.grid(ls="--",color="grey",alpha=0.3)
-            plt.legend(loc=3,frameon=False,fontsize=12)
+            plt.legend(loc=1,frameon=False,fontsize=12)
             plt.savefig("theta_distributions.pdf")
             plt.show()
             plt.close()
- 
+
+            # Plot fraction:
+            ang_bins = np.array(self.incident_ang_bins)
+            
+            # Note: Need to avoid overflow bin, so we take len(ang_bins) - 1:
+            frac = (theta_m[0:len(ang_bins)-1]/theta_i[0:len(ang_bins)-1])
+            plt.plot(ang_bins[0:len(ang_bins)-1],frac,ls="--",marker="o",color="black")
+            plt.ylabel(r"$\theta_m / \theta_i$", fontsize=14)
+            plt.xlabel(r"$\theta$", fontsize=14)
+            plt.xlim(0,100)
+            plt.ylim(0,1)
+            plt.xticks(fontsize=12)
+            plt.yticks(fontsize=12)
+            plt.grid(ls="--",color="grey",alpha=0.3)
+            plt.savefig("theta_i_m_residual.pdf")
+            plt.show()
+            plt.close()
+
         return
    
-    def load_response(self, rsp_file):
+    def load_response(self,rsp_file):
 
         """
         Load response file and corresponding normalization.
+
+        Note: Currently there are 5 different histograms used for 
+        analyzing the sims. I need to combine these to a single file. 
         """
-        
-        this_file = os.path.splitext(rsp_file)
-        norm_file = this_file[0] + '_norm.hdf5' 
+
         self.primary_rsp = Histogram.open(rsp_file)
-        self.starting_photons_rsp = Histogram.open(norm_file)
-        self.get_binning_info(energy_only=True)
+        self.starting_photons = Histogram.open('starting_photons.hdf5')
+        self.starting_photons_rsp = Histogram.open('starting_photons_rsp.hdf5')
+        self.measured_photons = Histogram.open('measured_photons.write.hdf5')
+        self.measured_photons_rsp = Histogram.open('measured_photons_rsp.hdf5')
+        self.get_binning_info()
 
         return
 
@@ -555,7 +663,7 @@ class Process(ProcessSims.Process):
         make_plots: Show plots. 
 
         rsp_file: Option to load resonse from hdf5 file.
-            - Must have corresponding norm file. 
+            - Give name of main response for now.  
         """
 
         # Option to load response from file:
