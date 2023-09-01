@@ -49,7 +49,7 @@ class MakeMassModels:
 
         return 
    
-    def get_cart_vectors(self, angle, altitude):
+    def get_cart_vectors(self, angle, altitude, beam_alt=200):
         
         """
         Get x position and direction vectors for off-axis beam.
@@ -57,12 +57,13 @@ class MakeMassModels:
         Inputs:
         angle: incident angle of source in degrees. 
         altitude: altitude of detecting plane in km.
+        beam_alt: altitude at which the beam is placed. Default is 200 km. 
         """
 
         conv = math.pi/180.0
         angle = angle * conv # radians
 
-        y = 200 - altitude # km 
+        y = beam_alt - altitude # km 
         x = y*math.tan(angle)  # km
         x = x * 1e5 # cm
         nx = -1*math.sin(angle)
@@ -89,24 +90,25 @@ class MakeMassModels:
         # plot elements:
         fig,ax1 = plt.subplots(figsize=(9,6))
         ax2 = ax1.twinx()
-        ax1.loglog(self.height,self.H,label="H")
-        ax1.loglog(self.height,self.He,label="He")
-        ax1.loglog(self.height,self.N,label="N (N + N2)")
-        ax1.loglog(self.height,self.O,label="O (O + O2)")
-        ax1.loglog(self.height,self.Ar,label="Ar")
-        ax1.set_ylabel("Number Density [$\mathrm{m^{-3}}$]",fontsize=12)
-        ax1.set_ylim(ymin=1e11,ymax=1e26)
-        ax1.set_xlabel("Altitude [km]", fontsize=12)
-        ax1.legend(loc=3,frameon=False)
+        ax1.loglog(self.height,1e-6*self.H,label="H")
+        ax1.loglog(self.height,1e-6*self.He,label="He")
+        ax1.loglog(self.height,1e-6*self.N,label="N (N + N2)")
+        ax1.loglog(self.height,1e-6*self.O,label="O (O + O2)")
+        ax1.loglog(self.height,1e-6*self.Ar,label="Ar")
+        ax1.set_ylabel("Number Density [$\mathrm{cm^{-3}}$]",fontsize=14)
+        ax1.set_ylim(ymin=1e-6*1e11,ymax=1e-6*1e26)
+        ax1.set_xlabel("Altitude [km]", fontsize=14)
+        ax1.legend(loc=3,frameon=False,fontsize=12)
         ax1.grid(ls=":",color="grey")
         ax1.tick_params(axis="both",labelsize=12)
 
         ax2.loglog(self.height,self.density,ls="--",lw=3,color="black",label="mass density")
-        ax2.set_ylabel("Mass Density [$\mathrm{g \ cm^{-3}}$]",fontsize=12)
-        ax2.legend(loc=1,frameon=False)
+        ax2.set_ylabel("Mass Density [$\mathrm{g \ cm^{-3}}$]",fontsize=14)
+        ax2.legend(loc=1,frameon=False,fontsize=14)
         ax2.tick_params(axis="y",labelsize=12)
 
-        ax1.set_xlabel("Altitude [km]", fontsize=12)
+        ax1.set_xlabel("Altitude [km]", fontsize=14)
+        plt.title("Atmosphere", fontsize=14)
         plt.savefig("particle_profile.pdf")
         plt.show()
         plt.close()

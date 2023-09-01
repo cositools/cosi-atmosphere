@@ -19,7 +19,7 @@ import matplotlib.colors as colors
 
 class Process:
 
-    def __init__(self, geo, theta, all_events_file="all_thrown_events.dat", \
+    def __init__(self, theta, all_events_file="all_thrown_events.dat", \
             measured_events_file="event_list.dat"):
     
         """
@@ -27,8 +27,6 @@ class Process:
         
         Inputs:
         
-        geo: Mass model geometery. Either "rectangular" or "spherical".
-
         theta: Off-axis angle of source in degrees.
         
         Note: Both input files are outputs from ParseSims:
@@ -74,24 +72,18 @@ class Process:
         # Define vector array:
         v = np.array([self.xdm,self.ydm,self.zdm]).T
     
-        # Get spherical coordinates for position:
+        # Spherical coordinates for measured position:
         self.sp_coords = astropy.coordinates.cartesian_to_spherical(self.xm,self.ym,self.zm)
         self.lat = self.sp_coords[1].deg # deg
         self.lon = self.sp_coords[2].deg # deg
 
-        # Get spherical coordinates for direction:
-        # Multipy by -1 to backproject onto the sky and rotate into detector coordinates
+        # Spherical coordinates for measured direction:
         self.sp_coords_dir = astropy.coordinates.cartesian_to_spherical(self.xdm,self.ydm,self.zdm)
-        self.lat_dir = 90 - (-1)*self.sp_coords_dir[1].deg  # deg
-        self.lon_dir = self.sp_coords_dir[2].deg - 180 # deg
+        self.lat_dir = self.sp_coords_dir[1].deg  # deg
+        self.lon_dir = self.sp_coords_dir[2].deg  # deg
 
-        # Define surface normal:
-        if geo == "spherical":
-            n = np.array([self.xm,self.ym,self.zm]).T
-        if geo == "rectangular":
-            n = np.array([0,0,-1])
-        
         # Get incident angle:
+        n = np.array([0,0,-1])
         self.incident_angle = self.angle(v,n)*(180/np.pi) # degrees
 
         return
@@ -189,12 +181,14 @@ class Process:
                 self.xyi_bins, self.xyi_bins], \
                 labels=["Ei [keV]", "ri [km]", "xi [cm]", "yi [cm]"])
         self.starting_photons.fill(self.ei, self.ri, self.xi, self.yi)
+        self.starting_photons.write('starting_photons.hdf5', overwrite=True)
 
         # Make histogram for measured photons:
         self.measured_photons = Histogram([self.energy_bin_edges, self.radial_bins, \
                 self.xym_bins, self.xym_bins, self.incident_ang_bins],\
                 labels=["Em [keV]", "rm [km]", "xm [cm]", "ym [cm]", "theta_prime [deg]"])
         self.measured_photons.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle)
+        self.measured_photons.write('measured_photons.hdf5', overwrite=True)
 
         # Make weighted histogram.
         # Events are weigthed by the cos of the incident angle. 
@@ -234,6 +228,23 @@ class Process:
         self.em_array = np.array(self.em_hist)
         self.rm_hist = self.measured_photons.project("rm [km]").contents
         self.rm_array = np.array(self.rm_hist)
+
+        return
+
+    def load_response(self, starting_ph_file="starting_photons.hdf5",\
+            measured_ph_file="measured_photons.hdf5"):
+
+        """
+        Load response files for starting and measured photons.
+
+        Inputs:
+        starting_ph_file: binned histogram for staring photons.
+        measured_ph_file: binned histogram for measured photons.
+        Note: Defaul ph_files are the output from the bin_sim method.
+        """
+        
+        self.starting_photons = Histogram.open(starting_ph_file)
+        self.measured_photons = Histogram.open(measured_ph_file)
 
         return
 
@@ -575,7 +586,11 @@ class Process:
 
         # Get index for theta of off-axis angle:
         theta_list = np.array(theta_list)
-        return_index = np.where(theta_list == self.theta)[0][0]
+        try:
+            return_index = np.where(theta_list == self.theta)[0][0]
+        except:
+            print("WARNING: Incident anlge is not in test list. Using 0 degrees.")
+            return_index = 0
         
         return tp_energy, tp_array[return_index]
 
@@ -712,9 +727,11 @@ class Process:
         ax.set_xscale('log')
         ax.set_yscale('log')
         cbar = plt.colorbar(img,fraction=0.045)
-        cbar.set_label("Probability")
-        plt.xlabel("Ei [keV]")
-        plt.ylabel("Em [keV]")
+        cbar.set_label("Probability", fontsize=12)
+        plt.xlabel("Ei [keV]", fontsize=14)
+        plt.ylabel("Em [keV]", fontsize=14)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
         plt.savefig(savefile)
         plt.show()
         plt.close()
@@ -729,16 +746,18 @@ class Process:
         e_official, tp_official = self.get_tp_from_file()
         
         # Plot TP:
-        plt.semilogx(self.emean, self.tp_total, ls="--", label="Total")
-        plt.semilogx(self.emean, self.tp_beam, ls="-", label="Unscattered")
-        plt.semilogx(self.emean, self.tp_scattered, ls=":", label="Scattered")
-        plt.semilogx(e_official, tp_official, ls="-.", label="Official (33 km)")
-        plt.xlabel("Ei [keV]")
-        plt.ylabel("Transmission Probability")
-        plt.ylim(0,1)
-        plt.legend(loc=2,ncol=2,frameon=False)
+        plt.semilogx(self.emean, self.tp_total, marker="o", ls="--", label="Total")
+        plt.semilogx(self.emean, self.tp_beam, marker="s", ls="-", label="Transmitted")
+        plt.semilogx(self.emean, self.tp_scattered, marker="^", ls=":", label="Scattered")
+        #plt.semilogx(e_official, tp_official, ls="-.", label="Official (33 km)")
+        plt.xlabel("Ei [keV]", fontsize=14)
+        plt.ylabel("Transmission Probability", fontsize=14)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
+        plt.ylim(0,1.2)
+        plt.legend(loc=2,ncol=1,frameon=False,fontsize=12)
         plt.grid(ls=":",color="grey",alpha=0.4)
-        plt.savefig("transmission_probability_from_edisp.png")
+        plt.savefig("transmission_probability_from_edisp.pdf")
         plt.show()
         plt.close()
 
@@ -779,6 +798,9 @@ class Process:
         Calculate atmospheric correction factor by forward folding the 
         atmospheric energy dispersion with the model counts. 
 
+        The energy dispersion matrices must first be generated via
+        the 'get_total_edisp_matrix' method. 
+
         inputs:
         model_flux: interp1d object giving the model flux as a function 
         of energy.
@@ -797,10 +819,7 @@ class Process:
             N_list.append(int_flux[0])
         N_list = np.array(N_list)
 
-        # Get normed edisp array:
-        self.get_total_edisp_matrix(make_plots=False)
-
-        # Matrix multiplication to get predicted counts (for beam and total):
+        # Matrix multiplication to get predicted counts (for total, beam, and scattered):
         p_total = np.matmul(self.normed_edisp_array_total,N_list)
         p_beam = np.matmul(self.normed_edisp_array_beam,N_list)
         p_scattered = np.matmul(self.normed_edisp_array_scattered,N_list)
@@ -828,12 +847,14 @@ class Process:
 
             # Plot correction factor:
             plt.figure(figsize=(7.5,5.5))
-            plt.semilogx(self.emean, c_total, lw=2, label="beam + scattered")
-            plt.semilogx(self.emean, c_beam, lw=2, label="beam")
-            plt.semilogx(self.emean, self.tp_beam, ls="--", lw=2, label="TP beam")
-            plt.xlabel("Energy [keV]")
-            plt.ylabel("FF Correction Factor")
-            plt.legend(loc=2,frameon=False)
+            plt.semilogx(self.emean, c_total, marker="o", lw=2, label="transmitted + scattered")
+            plt.semilogx(self.emean, c_beam, marker="s", lw=2, label="transmitted")
+            plt.semilogx(self.emean, self.tp_beam, ls="--", lw=2, label="TP")
+            plt.xlabel("Energy [keV]", fontsize=14)
+            plt.ylabel("FF Correction Factor", fontsize=14)
+            plt.xticks(fontsize=12)
+            plt.yticks(fontsize=12)
+            plt.legend(loc=2,frameon=False,fontsize=12)
             plt.grid(ls=":",color="grey",alpha=0.5)
             plt.savefig("ff_correction_%s.png" %name)
             plt.show()
@@ -841,12 +862,14 @@ class Process:
 
             # Plot correction factor ratio:
             plt.figure(figsize=(7.5,5.5))
-            plt.semilogx(self.emean, c_ratio)
-            plt.xlabel("Energy [keV]")
-            plt.ylabel("FF Correction Factor Ratio")
+            plt.semilogx(self.emean[2:], c_ratio[2:], marker="o")
+            plt.xlabel("Energy [keV]", fontsize=14)
+            plt.ylabel("FF Correction Factor Ratio", fontsize=14)
+            plt.xticks(fontsize=12)
+            plt.yticks(fontsize=12)
             plt.xlim(1e1,1e4)
             plt.grid(ls=":",color="grey",alpha=0.5)
-            plt.savefig("ff_correction_ratio_%s.png")
+            plt.savefig("ff_correction_ratio_%s.png" %name)
             plt.show()
             plt.close()
 
