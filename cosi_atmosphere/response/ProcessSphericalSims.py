@@ -575,11 +575,13 @@ class Process(ProcessSims.Process):
                 R = self.r_earth + self.r_alt # km
                 f_0 = self.f_0 # mean rate from disk in ph/km^2
                 c = 2*np.pi*(R**2)*f_0
-                
+               
+                print()
                 print("calculation of uniform flux through hemisphere:")
                 print("radius of hemisphere [km]: " + str(R))
                 print("mean rate from surrounding sphere disk [ph/km^2]: " + str(f_0))
-                
+                print()
+
                 return c*np.sin(theta)*np.cos(theta)
             
             analytical_soln = flux(self.incident_ang_bins*(np.pi/180))
@@ -595,7 +597,7 @@ class Process(ProcessSims.Process):
             plt.plot(self.incident_ang_bins,analytical_soln,label="analytical",ls=":",lw=3,color="grey",zorder=0,alpha=0.8)
             plt.yscale("log")
             plt.ylabel(r"$\Delta \Phi / \Delta \theta$  [$\mathrm{ph \ rad^{-1}}$]", fontsize=14)
-            plt.xlabel(r"$\theta$", fontsize=14)
+            plt.xlabel(r"$\theta \ [\circ]$", fontsize=14)
             plt.ylim(1e4,1e8)
             plt.xlim(0,100)
             plt.xticks(fontsize=12)
@@ -612,8 +614,8 @@ class Process(ProcessSims.Process):
             # Note: Need to avoid overflow bin, so we take len(ang_bins) - 1:
             frac = (theta_m[0:len(ang_bins)-1]/theta_i[0:len(ang_bins)-1])
             plt.plot(ang_bins[0:len(ang_bins)-1],frac,ls="--",marker="o",color="black")
-            plt.ylabel(r"$\theta_m / \theta_i$", fontsize=14)
-            plt.xlabel(r"$\theta$", fontsize=14)
+            plt.ylabel(r"$N_m / N_i$", fontsize=14)
+            plt.xlabel(r"$\theta \ [\circ]$", fontsize=14)
             plt.xlim(0,100)
             plt.ylim(0,1)
             plt.xticks(fontsize=12)
