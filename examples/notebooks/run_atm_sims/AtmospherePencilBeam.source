@@ -19,7 +19,7 @@ DefaultRangeCut 100
 
 Run SpaceSim
 SpaceSim.FileName         Atmosphere_PencilBeam
-SpaceSim.Triggers         10000
+SpaceSim.Triggers         100000
 
 SpaceSim.Source Beam
 Beam.ParticleType           1
