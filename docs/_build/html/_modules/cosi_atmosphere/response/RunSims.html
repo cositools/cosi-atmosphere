@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosi_atmosphere.response.RunSims &mdash; cosi-atmosphere  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            cosi-atmosphere
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">cosi-atmosphere</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cosi_atmosphere.response.RunSims</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosi_atmosphere.response.RunSims</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Imports</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<div class="viewcode-block" id="Simulate">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.Simulate">[docs]</a>
+<span class="k">class</span> <span class="nc">Simulate</span><span class="p">:</span>
+ 
+<div class="viewcode-block" id="Simulate.run_sim">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.Simulate.run_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_file</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run atmospheric sims.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_file : str</span>
+<span class="sd">            Cosima source file.</span>
+<span class="sd">        seed : int, optional</span>
+<span class="sd">            Option to pass seed to cosima (default is no seed). </span>
+<span class="sd">        verbosity : int, optional</span>
+<span class="sd">            Output level of cosima (default is 1).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">seed</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cosima -v </span><span class="si">%s</span><span class="s2"> -s </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">verbosity</span><span class="p">,</span><span class="n">seed</span><span class="p">,</span><span class="n">source_file</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">seed</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cosima -v </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">verbosity</span><span class="p">,</span><span class="n">source_file</span><span class="p">))</span>
+
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="Simulate.parse_sim_file">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.Simulate.parse_sim_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">parse_sim_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_file</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse sim file. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sim_file : str </span>
+<span class="sd">            Cosima sim file. </span>
+<span class="sd">        unique : bool </span>
+<span class="sd">            A photon may cross the detecting volume numerous times.</span>
+<span class="sd">            To only count the first pass, set unique=True (defualt). </span>
+<span class="sd">            If false, will count all passes. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># initiate lists:</span>
+        <span class="n">id_list_all</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">id_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ei_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">em_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">yi</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">zi</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">xm</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ym</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">zm</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">xdi</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ydi</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">zdi</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">xdm</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ydm</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">zdm</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">sim_file</span><span class="p">,</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+     
+            <span class="n">this_line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">this_line</span><span class="p">:</span>
+        
+                <span class="k">if</span> <span class="s2">&quot;ID&quot;</span> <span class="ow">in</span> <span class="n">this_line</span><span class="p">:</span>
+            
+                    <span class="n">this_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">this_line</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">time_line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">this_time</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">time_line</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+                    <span class="n">init_line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
+            
+                    <span class="c1"># Save initial info of all thrown photons:</span>
+                    <span class="n">id_list_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">this_id</span><span class="p">))</span>
+                    <span class="n">ei_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">init_line</span><span class="p">[</span><span class="mi">22</span><span class="p">]))</span>
+                    <span class="n">xi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">init_line</span><span class="p">[</span><span class="mi">4</span><span class="p">]))</span>
+                    <span class="n">yi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">init_line</span><span class="p">[</span><span class="mi">5</span><span class="p">]))</span>
+                    <span class="n">zi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">init_line</span><span class="p">[</span><span class="mi">6</span><span class="p">]))</span>
+                    <span class="n">xdi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">init_line</span><span class="p">[</span><span class="mi">16</span><span class="p">]))</span>
+                    <span class="n">ydi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">init_line</span><span class="p">[</span><span class="mi">17</span><span class="p">]))</span>
+                    <span class="n">zdi</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">init_line</span><span class="p">[</span><span class="mi">18</span><span class="p">]))</span>
+
+                    <span class="c1"># Get info for events that pass watched volume:</span>
+                    <span class="n">get_events</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">while</span> <span class="n">get_events</span><span class="p">:</span>
+
+                        <span class="n">next_line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
+               
+                        <span class="k">if</span> <span class="s2">&quot;IA ENTR&quot;</span> <span class="ow">in</span> <span class="n">next_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                
+                            <span class="n">id_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">this_id</span><span class="p">))</span>
+                            <span class="n">em_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">next_line</span><span class="p">[</span><span class="mi">14</span><span class="p">]))</span>
+                            <span class="n">xm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">next_line</span><span class="p">[</span><span class="mi">4</span><span class="p">]))</span>
+                            <span class="n">ym</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">next_line</span><span class="p">[</span><span class="mi">5</span><span class="p">]))</span>
+                            <span class="n">zm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">next_line</span><span class="p">[</span><span class="mi">6</span><span class="p">]))</span>
+                            <span class="n">xdm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">next_line</span><span class="p">[</span><span class="mi">8</span><span class="p">]))</span>
+                            <span class="n">ydm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">next_line</span><span class="p">[</span><span class="mi">9</span><span class="p">]))</span>
+                            <span class="n">zdm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">next_line</span><span class="p">[</span><span class="mi">10</span><span class="p">]))</span>
+
+                            <span class="c1"># Option to only consider first pass for each photon:</span>
+                            <span class="k">if</span> <span class="n">unique</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                                <span class="n">get_events</span> <span class="o">=</span> <span class="kc">False</span>
+
+                        <span class="c1"># Break if next photon event is reached:</span>
+                        <span class="k">if</span> <span class="s2">&quot;SE&quot;</span> <span class="ow">in</span> <span class="n">next_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                            <span class="n">get_events</span> <span class="o">=</span> <span class="kc">False</span>
+            
+                        <span class="c1"># Need to break at end of file:</span>
+                        <span class="k">if</span> <span class="s2">&quot;TS&quot;</span> <span class="ow">in</span> <span class="n">next_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                            <span class="k">break</span>
+
+            <span class="c1"># if line is empty end of file is reached</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">this_line</span><span class="p">:</span> 
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+        <span class="c1"># Write data for all thrown events:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="n">id_list_all</span><span class="p">,</span><span class="s2">&quot;ei[keV]&quot;</span><span class="p">:</span><span class="n">ei_list</span><span class="p">,</span><span class="s2">&quot;xi[cm]&quot;</span><span class="p">:</span><span class="n">xi</span><span class="p">,</span><span class="s2">&quot;yi[cm]&quot;</span><span class="p">:</span><span class="n">yi</span><span class="p">,</span><span class="s2">&quot;zi[cm]&quot;</span><span class="p">:</span><span class="n">zi</span><span class="p">,</span>\
+                <span class="s2">&quot;xdi[cm]&quot;</span><span class="p">:</span><span class="n">xdi</span><span class="p">,</span> <span class="s2">&quot;ydi[cm]&quot;</span><span class="p">:</span><span class="n">ydi</span><span class="p">,</span> <span class="s2">&quot;zdi[cm]&quot;</span><span class="p">:</span><span class="n">zdi</span><span class="p">}</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;all_thrown_events.dat&quot;</span><span class="p">,</span><span class="n">float_format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%10.9e</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span>\
+                <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="s2">&quot;ei[keV]&quot;</span><span class="p">,</span><span class="s2">&quot;xi[cm]&quot;</span><span class="p">,</span><span class="s2">&quot;yi[cm]&quot;</span><span class="p">,</span><span class="s2">&quot;zi[cm]&quot;</span><span class="p">,</span>\
+                <span class="s2">&quot;xdi[cm]&quot;</span><span class="p">,</span><span class="s2">&quot;ydi[cm]&quot;</span><span class="p">,</span><span class="s2">&quot;zdi[cm]&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Write event list for photons passing watched volume:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="n">id_list</span><span class="p">,</span> <span class="s2">&quot;em[keV]&quot;</span><span class="p">:</span><span class="n">em_list</span><span class="p">,</span> \
+                <span class="s2">&quot;xm[cm]&quot;</span><span class="p">:</span><span class="n">xm</span><span class="p">,</span> <span class="s2">&quot;ym[cm]&quot;</span><span class="p">:</span> <span class="n">ym</span><span class="p">,</span> <span class="s2">&quot;zm[cm]&quot;</span><span class="p">:</span><span class="n">zm</span><span class="p">,</span>\
+                <span class="s2">&quot;xdm[cm]&quot;</span><span class="p">:</span><span class="n">xdm</span><span class="p">,</span> <span class="s2">&quot;ydm[cm]&quot;</span><span class="p">:</span><span class="n">ydm</span><span class="p">,</span> <span class="s2">&quot;zdm[cm]&quot;</span><span class="p">:</span> <span class="n">zdm</span><span class="p">}</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;event_list.dat&quot;</span><span class="p">,</span><span class="n">float_format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%10.9e</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span>\
+                <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="s2">&quot;em[keV]&quot;</span><span class="p">,</span><span class="s2">&quot;xm[cm]&quot;</span><span class="p">,</span><span class="s2">&quot;ym[cm]&quot;</span><span class="p">,</span><span class="s2">&quot;zm[cm]&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;xdm[cm]&quot;</span><span class="p">,</span><span class="s2">&quot;ydm[cm]&quot;</span><span class="p">,</span><span class="s2">&quot;zdm[cm]&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Chris Karwin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

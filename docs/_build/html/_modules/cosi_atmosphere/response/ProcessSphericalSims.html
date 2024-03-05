@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosi_atmosphere.response.ProcessSphericalSims &mdash; cosi-atmosphere  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            cosi-atmosphere
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">cosi-atmosphere</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cosi_atmosphere.response.ProcessSphericalSims</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cosi_atmosphere.response.ProcessSphericalSims</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Imports:</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">histpy</span> <span class="kn">import</span> <span class="n">Histogram</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span><span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">colors</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">interp1d</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">integrate</span>
+<span class="kn">from</span> <span class="nn">astropy.coordinates</span> <span class="kn">import</span> <span class="n">SkyCoord</span>
+<span class="kn">import</span> <span class="nn">astropy.units</span> <span class="k">as</span> <span class="nn">u</span>
+<span class="kn">from</span> <span class="nn">astropy.convolution</span> <span class="kn">import</span> <span class="n">convolve</span><span class="p">,</span> <span class="n">Gaussian2DKernel</span>
+<span class="kn">from</span>  <span class="nn">cosi_atmosphere.response</span> <span class="kn">import</span> <span class="n">ProcessSims</span>
+<span class="kn">import</span> <span class="nn">astropy</span>
+<span class="kn">import</span> <span class="nn">healpy</span> <span class="k">as</span> <span class="nn">hp</span>
+<span class="kn">from</span> <span class="nn">healpy.newvisufunc</span> <span class="kn">import</span> <span class="n">projview</span><span class="p">,</span> <span class="n">newprojplot</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">colors</span>
+<span class="kn">from</span> <span class="nn">mhealpy</span> <span class="kn">import</span> <span class="n">HealpixMap</span><span class="p">,</span> <span class="n">HealpixBase</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+
+<div class="viewcode-block" id="ProcessSpherical">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical">[docs]</a>
+<span class="k">class</span> <span class="nc">ProcessSpherical</span><span class="p">(</span><span class="n">ProcessSims</span><span class="o">.</span><span class="n">Process</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">r_alt</span><span class="p">,</span> <span class="n">all_events_file</span><span class="o">=</span><span class="s2">&quot;all_thrown_events.dat&quot;</span><span class="p">,</span> \
+            <span class="n">measured_events_file</span><span class="o">=</span><span class="s2">&quot;event_list.dat&quot;</span><span class="p">):</span>
+<span class="w">    </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Analyze atmophere simulations from spherical mass model.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta : float </span>
+<span class="sd">            Incident angle in degrees. </span>
+<span class="sd">        r_alt : float </span>
+<span class="sd">            Altitude of observations in km. </span>
+<span class="sd">        all_events_file : str, optional </span>
+<span class="sd">            Event file with all thrown events (default is output </span>
+<span class="sd">            from ParseSims method). </span>
+<span class="sd">        measured_events_file : str, optional </span>
+<span class="sd">            Event file with all measured events (default is output </span>
+<span class="sd">            from ParseSims method).  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Get test directory:</span>
+        <span class="n">path_prefix</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">ProcessSims</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_prefix</span><span class="p">,</span><span class="s2">&quot;test_files&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Define Earth radius:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span> <span class="o">=</span> <span class="mf">6.378e8</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1e-5</span><span class="p">)</span> <span class="c1"># km</span>
+
+        <span class="c1"># Define altitude of observations:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r_alt</span> <span class="o">=</span> <span class="n">r_alt</span> <span class="c1"># km</span>
+
+        <span class="c1"># Read in all thrown events:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">all_events_file</span><span class="p">,</span> <span class="n">delim_whitespace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idi</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="c1"># event IDs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ei</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;ei[keV]&quot;</span><span class="p">]</span> <span class="c1"># starting energy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;xi[cm]&quot;</span><span class="p">])</span> <span class="c1"># starting x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;yi[cm]&quot;</span><span class="p">])</span> <span class="c1"># starting y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;zi[cm]&quot;</span><span class="p">])</span> <span class="c1"># starting z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xdi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;xdi[cm]&quot;</span><span class="p">])</span> <span class="c1"># starting x direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ydi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;ydi[cm]&quot;</span><span class="p">])</span> <span class="c1"># starting y direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zdi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;zdi[cm]&quot;</span><span class="p">])</span> <span class="c1"># starting z direction</span>
+        
+        <span class="c1"># Read in all measured events:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">measured_events_file</span><span class="p">,</span> <span class="n">delim_whitespace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idm</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="c1"># measured IDs (they correspond to initial IDs above)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">em</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;em[keV]&quot;</span><span class="p">]</span> <span class="c1"># measured energy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;xm[cm]&quot;</span><span class="p">])</span> <span class="c1"># measured x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ym</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;ym[cm]&quot;</span><span class="p">])</span> <span class="c1"># measured y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;zm[cm]&quot;</span><span class="p">])</span> <span class="c1"># measured z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xdm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;xdm[cm]&quot;</span><span class="p">])</span> <span class="c1"># measured x direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ydm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;ydm[cm]&quot;</span><span class="p">])</span> <span class="c1"># measured y direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zdm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;zdm[cm]&quot;</span><span class="p">])</span> <span class="c1"># measured z direction</span>
+ 
+        <span class="c1">#  Define vector array for initial direction:</span>
+        <span class="n">keep_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">idm</span><span class="p">)</span>
+        <span class="n">vi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">xdi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ydi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zdi</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># Define vector array for measured direction:</span>
+        <span class="n">vm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">xdm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ydm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zdm</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+   
+        <span class="c1"># Spherical coordinates for initial position:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_ri</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">cartesian_to_spherical</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_ri</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1e-5</span><span class="p">)</span> <span class="c1"># km</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lat_ri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_ri</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">deg</span> <span class="c1"># deg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lon_ri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_ri</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">deg</span> <span class="c1"># deg</span>
+
+        <span class="c1"># Spherical coordinates for initial direction:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_di</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">cartesian_to_spherical</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xdi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ydi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zdi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lat_di</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_di</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">deg</span>  <span class="c1"># deg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lon_di</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_di</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">deg</span>  <span class="c1"># deg</span>
+
+        <span class="c1"># Spherical coordinates for measured position:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_rm</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">cartesian_to_spherical</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ym</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_rm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1e-5</span><span class="p">)</span> <span class="c1"># km</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lat_rm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_rm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">deg</span> <span class="c1"># deg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lon_rm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_rm</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">deg</span> <span class="c1"># deg</span>
+
+        <span class="c1"># Spherical coordinates for measured direction:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_dm</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">cartesian_to_spherical</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xdm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ydm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zdm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lat_dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_dm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">deg</span>  <span class="c1"># deg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lon_dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_coords_dm</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">deg</span> <span class="c1"># deg</span>
+
+        <span class="c1"># Get points of intersection:</span>
+        <span class="c1"># Note: this isn&#39;t used anymore, but I&#39;ll</span>
+        <span class="c1"># keep it here for now, as well as corresponding</span>
+        <span class="c1"># functions, because it may be useful later on. </span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zi</span><span class="p">])</span><span class="o">.</span><span class="n">T</span> <span class="c1"># cm</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">xdi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ydi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zdi</span><span class="p">])</span><span class="o">.</span><span class="n">T</span> <span class="c1"># cm</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_alt</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e5</span> <span class="c1"># cm</span>
+        <span class="n">intersecting_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_projection</span><span class="p">(</span><span class="n">o</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">r</span><span class="p">)</span>
+        
+        <span class="c1"># Define surface normal for measured photons:</span>
+        <span class="n">nm</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">xm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ym</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zm</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        
+        <span class="c1"># Define surface normal for initial photons:</span>
+        <span class="c1">#</span>
+        <span class="c1"># With our simulation setup, this will actually </span>
+        <span class="c1"># be the same as nm. However, in this scheme, </span>
+        <span class="c1"># ni is undefined for photons that are not measured.</span>
+        <span class="c1"># Currently, undefined ni are being ignored,</span>
+        <span class="c1"># and this seems to give the correct solution. </span>
+        <span class="c1"># The main calibration here is comparison with </span>
+        <span class="c1"># the rectangular geometery, as well as comparison </span>
+        <span class="c1"># to real atmospheric data. </span>
+        <span class="c1">#</span>
+        <span class="c1"># We&#39;ll first define the array using initial positions,</span>
+        <span class="c1"># in order to get the right shape. Then we&#39;ll update values below.</span>
+        <span class="n">ni</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zi</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># Set ni to nm for measured photons: </span>
+        <span class="n">keep_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">idm</span><span class="p">)</span>
+        <span class="n">ni</span><span class="p">[</span><span class="n">keep_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">nm</span>
+    
+        <span class="c1"># Get incident angle for initial photons:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incident_angle_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">vi</span><span class="p">,</span><span class="n">ni</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="c1"># degrees</span>
+
+        <span class="c1"># Set incident angle of un-measured photons to arbitrarily high angle:</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: Not all incident angles are defined.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of undefined incident angles: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_angle_i</span><span class="p">[</span><span class="o">~</span><span class="n">keep_index</span><span class="p">])))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting undefined incident angles to 400 degrees&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incident_angle_i</span><span class="p">[</span><span class="o">~</span><span class="n">keep_index</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e6</span>
+
+        <span class="c1"># Get incident angle for measured photons:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incident_angle_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span><span class="n">nm</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="c1"># degrees</span>
+
+        <span class="c1"># Incident angle in degrees:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta</span> <span class="o">=</span> <span class="n">theta</span>
+
+        <span class="k">return</span>
+
+<div class="viewcode-block" id="ProcessSpherical.dot_product">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.dot_product">[docs]</a>
+    <span class="k">def</span> <span class="nf">dot_product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">):</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates dot product of two vectors, v1 and v2.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        v1 : array</span>
+<span class="sd">            First vector.</span>
+<span class="sd">        v2 : array</span>
+<span class="sd">            Second vector.</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        Input vector arrays must have shape</span>
+<span class="sd">        (rows, cols) = (N,3),</span>
+<span class="sd">        where cols is x,y,z coordinates,</span>
+<span class="sd">        and rows is number of vectors.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dp : float</span>
+<span class="sd">            Dot product of v1 and v2.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+      
+        <span class="c1"># For array with multiple vectors:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">v2</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">dp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">v1</span><span class="o">*</span><span class="n">v2</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="c1"># For single vector array:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">v2</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">dp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">v1</span><span class="o">*</span><span class="n">v2</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dp</span></div>
+
+    
+<div class="viewcode-block" id="ProcessSpherical.length">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.length">[docs]</a>
+    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates length of vector.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        v : array</span>
+<span class="sd">            Input vector.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Vector length. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dot_product</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v</span><span class="p">))</span></div>
+
+    
+<div class="viewcode-block" id="ProcessSpherical.angle">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.angle">[docs]</a>
+    <span class="k">def</span> <span class="nf">angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">):</span>
+<span class="w">       </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates angle between two vectors, in radians.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        v1 : array</span>
+<span class="sd">            First vector.</span>
+<span class="sd">        v2 : array</span>
+<span class="sd">            Second vector.</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        Input vector arrays must have shape</span>
+<span class="sd">        (rows, cols) = (N,3),</span>
+<span class="sd">        where cols is x,y,z coordinates,</span>
+<span class="sd">        and rows is number of vectors.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        angle : float</span>
+<span class="sd">            Angle in radians.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+         
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dot_product</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">(</span><span class="n">v2</span><span class="p">))</span>
+        
+        <span class="c1"># Need to round to limited decimal places, </span>
+        <span class="c1"># otherwise, rounding errors may give arg&gt;1, </span>
+        <span class="c1"># which is undefined in arccos. </span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">angle</span></div>
+
+
+<div class="viewcode-block" id="ProcessSpherical.line_point">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.line_point">[docs]</a>
+    <span class="k">def</span> <span class="nf">line_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">o</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">d</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Finds  point on a line segment.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        o : array-like </span>
+<span class="sd">            Point on line. In our case it&#39;s the starting photon position.</span>
+<span class="sd">        u : array-like</span>
+<span class="sd">            Direction of line segment. In our case it&#39;s the starting photon direction.</span>
+<span class="sd">        d: array-like </span>
+<span class="sd">            Distance from specified point (o) in the specified direction (u).</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        x : array-like</span>
+<span class="sd">            Point on line. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    
+        <span class="c1"># Standard equation of a line</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">o</span> <span class="o">+</span> <span class="p">(</span><span class="n">d</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="ProcessSpherical.find_projection">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.find_projection">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_projection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">o</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">r</span><span class="p">):</span>
+<span class="w">    </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Finds projection of line segment onto sphere.</span>
+<span class="sd">        </span>
+<span class="sd">        Everything should be done in Cartesian coordinates.</span>
+<span class="sd">        The closest point of intersection defines the normal vector to </span>
+<span class="sd">        the surface, relative to the initial direction.</span>
+<span class="sd">        The true incident angle (before scattering) is the angle </span>
+<span class="sd">        between these two vectors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        o : array-like </span>
+<span class="sd">            Point on line. In our case it&#39;s the starting photon position.</span>
+<span class="sd">        u : array_like</span>
+<span class="sd">            Direction of line segment. In our case it&#39;s the starting photon direction.</span>
+<span class="sd">        r : float</span>
+<span class="sd">            Radius of watched sphere. Default is r_earth + 33.1 km. </span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        intersection : array</span>
+<span class="sd">            Point of intersection</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        All inputs must have self-consistent units.  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Solve for d.</span>
+        <span class="c1"># This is the solution of a quadratic equation, so we want the </span>
+        <span class="c1"># shortest distance, which is the first intercept. </span>
+        <span class="n">dp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dot_product</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">o</span><span class="p">)</span>
+        <span class="n">sqrt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">dp</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">norm</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">o</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finding intersection...&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of photons with no solution: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sqrt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">)])))</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="n">num_plus</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span> <span class="n">dp</span> <span class="o">+</span> <span class="n">sqrt</span>
+        <span class="n">num_min</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span> <span class="n">dp</span> <span class="o">-</span> <span class="n">sqrt</span>
+        <span class="n">denom</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">sol1</span> <span class="o">=</span> <span class="n">num_plus</span><span class="o">/</span><span class="n">denom</span>
+        <span class="n">sol2</span> <span class="o">=</span> <span class="n">num_min</span><span class="o">/</span><span class="n">denom</span>
+        <span class="n">min_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">sol1</span><span class="p">,</span><span class="n">sol2</span><span class="p">)</span>
+
+        <span class="c1"># Get intersecting point:</span>
+        <span class="n">intersection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_point</span><span class="p">(</span><span class="n">o</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">min_d</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">intersection</span></div>
+
+
+<div class="viewcode-block" id="ProcessSpherical.bin_sim">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.bin_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">bin_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elow</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ehigh</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">num_ebins</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span> \
+            <span class="n">anglow</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">anghigh</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_angbins</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span>  <span class="n">nside</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="s1">&#39;ring&#39;</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bins the simulations, and writes output files </span>
+<span class="sd">        for both starting and measured photons. </span>
+<span class="sd">           </span>
+<span class="sd">        Events are weigthed by the ratio of the cosine of incident </span>
+<span class="sd">        angle to cosine of measured angle. This is a geometric </span>
+<span class="sd">        correction factor to account for the effect of the projected area.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        elow : float, optional</span>
+<span class="sd">            Lower energy bound in keV (defualt is 100 keV). </span>
+<span class="sd">        ehigh : float, optional </span>
+<span class="sd">            Upper energy bound in keV (default is 10000 keV.</span>
+<span class="sd">        num_ebins : int, optional </span>
+<span class="sd">            Number of energy bins to use (default is 17). Only log binning for now. </span>
+<span class="sd">        anglow : float, optional</span>
+<span class="sd">            Lower bound of angle in degrees (default is 0).</span>
+<span class="sd">        anghigh : float, optional</span>
+<span class="sd">            Upper bound of anlge in degrees (default is 100)</span>
+<span class="sd">        num_angbins : int, optional</span>
+<span class="sd">            Number of angular bins (default is 26).</span>
+<span class="sd">        nside : int, optional </span>
+<span class="sd">            nside for healpix binning (defualt is 16).</span>
+<span class="sd">        scheme : str, optional </span>
+<span class="sd">            Scheme for healpix binning (ring or nested). Default is ring.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Define energy bin edges: </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">elow</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ehigh</span><span class="p">),</span> <span class="n">num_ebins</span><span class="p">)</span>
+        
+        <span class="c1"># Define radial bin edges (ri is normalized relative to Earth&#39;s surface):</span>
+        <span class="n">rlow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span> 
+        <span class="n">rhigh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span> <span class="o">+</span> <span class="mi">4000</span>
+        <span class="n">num_rbins</span> <span class="o">=</span> <span class="mi">4000</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radial_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">rlow</span><span class="p">,</span> <span class="n">rhigh</span><span class="p">,</span> <span class="n">num_rbins</span><span class="p">)</span>
+        
+        <span class="c1"># Define incident angle bin edges (for initial and measured):</span>
+        <span class="c1"># Using 4 deg resolution for now.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">anglow</span><span class="p">,</span><span class="n">anghigh</span><span class="p">,</span><span class="n">num_angbins</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Theta bins:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span><span class="p">)</span>
+
+        <span class="c1"># Healpix parameters:</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using NSIDE </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="nb">str</span><span class="p">(</span><span class="n">nside</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Approximate resolution at NSIDE </span><span class="si">{}</span><span class="s2"> is </span><span class="si">{:.2}</span><span class="s2"> deg&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nside</span><span class="p">,</span> <span class="n">hp</span><span class="o">.</span><span class="n">nside2resol</span><span class="p">(</span><span class="n">nside</span><span class="p">,</span> <span class="n">arcmin</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="n">npix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">nside2npix</span><span class="p">(</span><span class="n">nside</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ang_bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">npix</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="c1"># Bin initial longitude and latitude position with healpix:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_ri</span> <span class="o">=</span> <span class="n">HealpixMap</span><span class="p">(</span><span class="n">nside</span> <span class="o">=</span> <span class="n">nside</span><span class="p">,</span> <span class="n">scheme</span> <span class="o">=</span> <span class="n">scheme</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ang_pixs_ri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_ri</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_ri</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_ri</span><span class="p">,</span><span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1"># Bin initial longitude and latitude direction with healpix:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_di</span> <span class="o">=</span> <span class="n">HealpixMap</span><span class="p">(</span><span class="n">nside</span> <span class="o">=</span> <span class="n">nside</span><span class="p">,</span> <span class="n">scheme</span> <span class="o">=</span> <span class="n">scheme</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ang_pixs_di</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_di</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_di</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_di</span><span class="p">,</span><span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Bin measured longitude and latitude position with healpix:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_rm</span> <span class="o">=</span> <span class="n">HealpixMap</span><span class="p">(</span><span class="n">nside</span> <span class="o">=</span> <span class="n">nside</span><span class="p">,</span> <span class="n">scheme</span> <span class="o">=</span> <span class="n">scheme</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ang_pixs_rm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_rm</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rm</span><span class="p">,</span><span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1"># Bin measured longitude and latitude direction with healpix:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_dm</span> <span class="o">=</span> <span class="n">HealpixMap</span><span class="p">(</span><span class="n">nside</span> <span class="o">=</span> <span class="n">nside</span><span class="p">,</span> <span class="n">scheme</span> <span class="o">=</span> <span class="n">scheme</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ang_pixs_dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_dm</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_dm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_dm</span><span class="p">,</span><span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+        <span class="c1"># Make histogram for starting photons:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span> <span class="o">=</span> <span class="n">Histogram</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radial_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ang_bin_edges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ang_bin_edges</span><span class="p">],</span> \
+                <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Ei [keV]&quot;</span><span class="p">,</span> <span class="s2">&quot;ri [km]&quot;</span><span class="p">,</span> <span class="s2">&quot;ang_ri_pixs&quot;</span><span class="p">,</span> <span class="s2">&quot;ang_di_pixs&quot;</span><span class="p">],</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ei</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ri</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ang_pixs_ri</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ang_pixs_di</span><span class="p">)</span>
+
+        <span class="c1"># Make histogram for starting photons response:</span>
+        <span class="n">keep_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">idm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons_rsp</span> <span class="o">=</span> <span class="n">Histogram</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span><span class="p">],</span>\
+                <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Ei [keV]&quot;</span><span class="p">,</span> <span class="s2">&quot;theta_i [deg]&quot;</span><span class="p">],</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons_rsp</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ei</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">incident_angle_i</span><span class="p">)</span>
+
+        <span class="c1"># Make histogram for measured photons:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons</span> <span class="o">=</span> <span class="n">Histogram</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radial_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ang_bin_edges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ang_bin_edges</span><span class="p">],</span>\
+                <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Em [keV]&quot;</span><span class="p">,</span> <span class="s2">&quot;rm [km]&quot;</span><span class="p">,</span> <span class="s2">&quot;ang_rm_pixs&quot;</span><span class="p">,</span> <span class="s2">&quot;ang_dm_pixs&quot;</span> <span class="p">],</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">em</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ang_pixs_rm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ang_pixs_dm</span><span class="p">)</span>
+
+        <span class="c1"># Make histogram for measured photons response:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons_rsp</span> <span class="o">=</span> <span class="n">Histogram</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span><span class="p">],</span>\
+                <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Em [keV]&quot;</span><span class="p">,</span> <span class="s2">&quot;theta_m [deg]&quot;</span><span class="p">],</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons_rsp</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">em</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">incident_angle_m</span><span class="p">)</span>
+
+        <span class="c1"># Make primary response atmospheric response matric:</span>
+       
+        <span class="c1"># Get index for photons that reach the watched volume:</span>
+        <span class="n">keep_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">idm</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of simulated events: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idi</span><span class="p">)))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of events that reached watched volume: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idm</span><span class="p">)))</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span> <span class="o">=</span> <span class="n">Histogram</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span><span class="p">,</span>\
+                <span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span><span class="p">],</span>\
+                <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Ei [keV]&quot;</span><span class="p">,</span> <span class="s2">&quot;Em [keV]&quot;</span><span class="p">,</span> <span class="s2">&quot;theta_i [deg]&quot;</span><span class="p">,</span> <span class="s2">&quot;theta_m [deg]&quot;</span><span class="p">],</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ei</span><span class="p">[</span><span class="n">keep_index</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">em</span><span class="p">,</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">incident_angle_i</span><span class="p">[</span><span class="n">keep_index</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">incident_angle_m</span><span class="p">)</span>
+
+        <span class="c1"># Write response to file:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;starting_photons.hdf5&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons_rsp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;starting_photons_rsp.hdf5&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;measured_photons.write.hdf5&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons_rsp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;measured_photons_rsp.hdf5&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;primary_rsp.hdf5&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1"># Get binning info:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_binning_info</span><span class="p">()</span>
+
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="ProcessSpherical.get_binning_info">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.get_binning_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_binning_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get info from histogram.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Energy info:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_centers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="s2">&quot;Ei [keV]&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">centers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_widths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="s2">&quot;Ei [keV]&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">widths</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="s2">&quot;Ei [keV]&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">edges</span>
+
+        <span class="c1"># Get mean energy:</span>
+        <span class="n">emean_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">emean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_edges</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">emean_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">emean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">emean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">emean_list</span><span class="p">)</span>
+        
+        <span class="c1"># Radius info:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radial_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="s2">&quot;ri [km]&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">edges</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radial_bin_centers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="s2">&quot;ri [km]&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">centers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radial_bin_widths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="s2">&quot;ri [km]&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">widths</span>
+
+        <span class="c1"># Incident angle bins:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="s2">&quot;theta_i [deg]&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">centers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="s2">&quot;theta_i [deg]&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">edges</span>
+
+        <span class="c1"># Projected histograms:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ei_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">&quot;Ei [keV]&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ei_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ei_hist</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">em_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">&quot;Em [keV]&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">em_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">em_hist</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ri_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">&quot;ri [km]&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ri_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ri_hist</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rm_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">&quot;rm [km]&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rm_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rm_hist</span><span class="p">)</span>
+        
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="ProcessSpherical.make_scattering_plots">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.make_scattering_plots">[docs]</a>
+    <span class="k">def</span> <span class="nf">make_scattering_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_init</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pos_meas</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pos_proj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>\
+            <span class="n">pos_ang_ri</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pos_ang_di</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ri</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>\
+            <span class="n">pos_ang_rm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pos_ang_dm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>\
+            <span class="n">theta_dist</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ang_dist</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Visualize the simulated photons. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pos_init : bool, optional </span>
+<span class="sd">            3d scatter plot of initial postions</span>
+<span class="sd">        pos_meas : bool, optional </span>
+<span class="sd">            3d scatter plot of measured positions</span>
+<span class="sd">        pos_proj : bool, optional </span>
+<span class="sd">            2d projection onto xy-axis of initial positions</span>
+<span class="sd">        pos_ang_ri : bool, optional </span>
+<span class="sd">            healpix map of initial positions</span>
+<span class="sd">        pos_ang_di : bool, optional </span>
+<span class="sd">            healpix map of initial directions</span>
+<span class="sd">        ri : bool, optional</span>
+<span class="sd">            initial radius (relative to both Earth center and surrounding sphere disk)</span>
+<span class="sd">        pos_ang_rm : bool, optional </span>
+<span class="sd">            healpix map of measured positions</span>
+<span class="sd">        pos_ang_dm : bool, optional </span>
+<span class="sd">            healpix map of measured directions</span>
+<span class="sd">        rm : bool, optional </span>
+<span class="sd">            measured radius with respect to Earth center </span>
+<span class="sd">        theta_dist : bool, optional </span>
+<span class="sd">            distributions of incident angle (initial and measured) </span>
+<span class="sd">        ang_dist : bool, optional </span>
+<span class="sd">            distribution of measured anlges for a given initial angle</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Initial photons 3d position: </span>
+        <span class="k">if</span> <span class="n">pos_init</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span> <span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zi</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_ri</span><span class="p">,</span>\
+                <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span><span class="n">depthshade</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">shrink</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Latitude&quot;</span><span class="p">,</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.15</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;x [cm]&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;y [cm]&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;z [cm]&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Initial Photon Position&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;initial_photon_position.png&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+ 
+        <span class="c1"># Measured photons 3d position:</span>
+        <span class="k">if</span> <span class="n">pos_meas</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">projection</span> <span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter3D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ym</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zm</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rm</span><span class="p">,</span>\
+                <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span><span class="n">depthshade</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">shrink</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Latitude&quot;</span><span class="p">,</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.15</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;x [cm]&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;y [cm]&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;z [cm]&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Measured Photon Position&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;measured_photon_position.png&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Measured and initial photons 2d position:</span>
+        <span class="k">if</span> <span class="n">pos_proj</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yi</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;cornflowerblue&quot;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;initial&quot;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xm</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ym</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;darkorange&quot;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;measured&quot;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;x [cm]&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;y [cm]&#39;</span><span class="p">)</span>
+            <span class="n">circ</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="mf">6.378e8</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">,</span>
+                    <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;Earth radius&quot;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">circ</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Photon Position xy Projection&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">loc</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">ncol</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;measured_photon_xy_projection.png&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Plot initial angular position:</span>
+        <span class="k">if</span> <span class="n">pos_ang_ri</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">&quot;ang_ri_pixs&quot;</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">HealpixMap</span><span class="p">(</span><span class="n">base</span> <span class="o">=</span> <span class="n">HealpixBase</span><span class="p">(</span><span class="n">npix</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">nbins</span><span class="p">),</span> <span class="n">data</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span>
+            <span class="n">plot</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;mollview&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Initial Position&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;initial_position_healpix.png&quot;</span><span class="p">,</span><span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Plot initial angular direction:</span>
+        <span class="k">if</span> <span class="n">pos_ang_di</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">&quot;ang_di_pixs&quot;</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">HealpixMap</span><span class="p">(</span><span class="n">base</span> <span class="o">=</span> <span class="n">HealpixBase</span><span class="p">(</span><span class="n">npix</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">nbins</span><span class="p">),</span> <span class="n">data</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span>
+            <span class="n">plot</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;mollview&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Initial Direction&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;initial_direction_healpix.png&quot;</span><span class="p">,</span><span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Distribution of radius for initial photons:</span>
+        <span class="k">if</span> <span class="n">ri</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+           
+            <span class="c1"># First calculate relative to surrounding sphere disk:</span>
+
+            <span class="c1"># Define rdisk of surrounding sphere disk:</span>
+            <span class="n">rsphere</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span> <span class="o">+</span> <span class="mi">200</span>
+            <span class="n">rdisk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radial_bins</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">rsphere</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> 
+
+            <span class="c1"># Get rdisk width:</span>
+            <span class="n">rdisk_width</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">rdisk_mean</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">rdisk</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">rdisk_width</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rdisk</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">rdisk</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">rdisk_width</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rdisk_width</span><span class="p">)</span>
+          
+            <span class="c1"># Calculate the differential area:</span>
+            <span class="c1"># Note: I use the full expression, which includes the</span>
+            <span class="c1"># squared differential term. This is often ignored, </span>
+            <span class="c1"># but is important to include for r near 0. </span>
+            <span class="n">area</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">rdisk</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">rdisk_width</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">rdisk_width</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            
+            <span class="c1"># Calculate rate:</span>
+            <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ri_array</span><span class="o">/</span><span class="p">(</span><span class="n">area</span><span class="p">)</span>
+            
+            <span class="c1"># Get mean rate from disk:</span>
+            <span class="n">good_index</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rdisk</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">rdisk</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">rsphere</span><span class="p">)</span>
+            <span class="n">good_rate</span> <span class="o">=</span> <span class="n">rate</span><span class="p">[</span><span class="n">good_index</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">f_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">good_rate</span><span class="p">)</span> <span class="c1"># mean rate: ph/km2</span>
+            
+            <span class="c1"># Plot:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">rdisk</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">rate</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;cornflowerblue&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;darkorange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;r_earth&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span><span class="o">+</span><span class="mi">200</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;r_earth+200&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;counts/area [$\mathrm{ph \ km^{-2}}$]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;r_disk [km]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">loc</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.1</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">rsphere</span><span class="o">*</span><span class="mf">1.2</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;ri_dist_disk_center.pdf&quot;</span><span class="p">)</span>    
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            
+            <span class="c1"># Plot relative to Earth center:</span>
+            <span class="n">area</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radial_bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">radial_bin_widths</span>
+            <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ri_array</span><span class="o">/</span><span class="p">(</span><span class="n">area</span><span class="p">)</span>
+            
+            <span class="c1"># Plot:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radial_bin_centers</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;cornflowerblue&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;darkorange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;r_earth&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span><span class="o">+</span><span class="mi">200</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;r_earth+200&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;counts/area [$\mathrm{ph \ km^{-2}}$]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;ri [km]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mf">6e3</span><span class="p">,</span><span class="mf">1e4</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ri_array</span><span class="o">/</span><span class="p">(</span><span class="n">area</span><span class="p">)))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;ri_dist_earth_center.pdf&quot;</span><span class="p">)</span>    
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Plot measured angular position:</span>
+        <span class="k">if</span> <span class="n">pos_ang_rm</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">&quot;ang_rm_pixs&quot;</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">HealpixMap</span><span class="p">(</span><span class="n">base</span> <span class="o">=</span> <span class="n">HealpixBase</span><span class="p">(</span><span class="n">npix</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">nbins</span><span class="p">),</span> <span class="n">data</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span>
+            <span class="n">plot</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;mollview&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Measured Position&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;measured_position_healpix.png&quot;</span><span class="p">,</span><span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Plot measured angular direction:</span>
+        <span class="k">if</span> <span class="n">pos_ang_dm</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">&quot;ang_dm_pixs&quot;</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">HealpixMap</span><span class="p">(</span><span class="n">base</span> <span class="o">=</span> <span class="n">HealpixBase</span><span class="p">(</span><span class="n">npix</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">nbins</span><span class="p">),</span> <span class="n">data</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span>
+            <span class="n">plot</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;mollview&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;dotted&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Measured Direction&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;measured_direction_healpix.png&quot;</span><span class="p">,</span><span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Distribution of radius for measured photons:</span>
+        <span class="k">if</span> <span class="n">rm</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radial_bin_centers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rm_array</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;cornflowerblue&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;darkorange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;r_earth&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span><span class="o">+</span><span class="mi">200</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;r_earth+200&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;counts [$\mathrm</span><span class="si">{ph}</span><span class="s2">$]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;rm [km]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mf">6.1e3</span><span class="p">,</span><span class="mf">6.9e3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;rm_dist.pdf&quot;</span><span class="p">)</span>    
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Plot theta_distributions:</span>
+        <span class="k">if</span> <span class="n">theta_dist</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+            <span class="c1"># Average flux needs to be calculated from ri.</span>
+            <span class="c1"># Make sure that this has been done:</span>
+            <span class="k">try</span><span class="p">:</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">f_0</span>
+            <span class="k">except</span><span class="p">:</span> 
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Average flux is not calculated.&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You must set ri = True&quot;</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+            <span class="c1"># Solution for the flux of a constant field</span>
+            <span class="c1"># through a hemisphere. </span>
+            <span class="k">def</span> <span class="nf">flux</span><span class="p">(</span><span class="n">theta</span><span class="p">):</span>
+                
+                <span class="n">R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_earth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_alt</span> <span class="c1"># km</span>
+                <span class="n">f_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_0</span> <span class="c1"># mean rate from disk in ph/km^2</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">R</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">f_0</span>
+               
+                <span class="nb">print</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;calculation of uniform flux through hemisphere:&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;radius of hemisphere [km]: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mean rate from surrounding sphere disk [ph/km^2]: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">f_0</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">()</span>
+
+                <span class="k">return</span> <span class="n">c</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+            
+            <span class="n">analytical_soln</span> <span class="o">=</span> <span class="n">flux</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">180</span><span class="p">))</span>
+            
+            <span class="c1"># Need to compare the analytical solution to counts/angle in steradians:</span>
+            <span class="n">d_theta</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">180</span><span class="p">)</span>
+
+            <span class="c1"># Plot distributions:</span>
+            <span class="n">theta_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">starting_photons_rsp</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">&quot;theta_i [deg]&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span>
+            <span class="n">theta_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">measured_photons_rsp</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">&quot;theta_m [deg]&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">stairs</span><span class="p">(</span><span class="n">theta_i</span><span class="o">/</span><span class="n">d_theta</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;initial&quot;</span><span class="p">,</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span><span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">stairs</span><span class="p">(</span><span class="n">theta_m</span><span class="o">/</span><span class="n">d_theta</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;measured&quot;</span><span class="p">,</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span><span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span><span class="p">,</span><span class="n">analytical_soln</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;analytical&quot;</span><span class="p">,</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span><span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\Delta \Phi / \Delta \theta$  [$\mathrm{ph \ rad^{-1}}$]&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\theta \ [\circ]$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">1e4</span><span class="p">,</span><span class="mf">1e8</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;theta_distributions.pdf&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="c1"># Plot fraction:</span>
+            <span class="n">ang_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_bins</span><span class="p">)</span>
+            
+            <span class="c1"># Note: Need to avoid overflow bin, so we take len(ang_bins) - 1:</span>
+            <span class="n">frac</span> <span class="o">=</span> <span class="p">(</span><span class="n">theta_m</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">ang_bins</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">theta_i</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">ang_bins</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ang_bins</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">ang_bins</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">frac</span><span class="p">,</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$N_m / N_i$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\theta \ [\circ]$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;theta_i_m_residual.pdf&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+        <span class="k">if</span> <span class="n">ang_dist</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+           
+            <span class="c1"># This is still being tested. </span>
+            <span class="n">ang_bin</span> <span class="o">=</span> <span class="mi">12</span> <span class="c1"># 0, 8 (34 deg), 12 (50 deg)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_centers</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;energy: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_bin_centers</span><span class="p">[</span><span class="mi">15</span><span class="p">]))</span> <span class="c1"># 7 (261 keV), 15 (8 MeV)  </span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">slice</span><span class="p">[{</span><span class="s2">&quot;theta_i [deg]&quot;</span><span class="p">:</span><span class="n">ang_bin</span><span class="p">,</span><span class="s2">&quot;Ei [keV]&quot;</span><span class="p">:</span><span class="mi">7</span><span class="p">}]</span><span class="o">.</span><span class="n">project</span><span class="p">([</span><span class="s2">&quot;theta_m [deg]&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">,</span><span class="n">dist</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;true&quot;</span><span class="p">)</span>
+           
+            <span class="n">ang_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">[</span><span class="n">ang_bin</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">180</span><span class="p">)</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ang_i</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">180.0</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">))</span><span class="o">*</span><span class="n">dist</span>
+            <span class="c1">#new *= (np.sin(ang_i)/np.sin((np.pi/180.0)*self.incident_ang_centers))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">,</span><span class="n">new</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;-.&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;scaled by cos($\theta_i$)/cos($\theta_m$)&quot;</span><span class="p">)</span>
+
+            <span class="n">ang_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">[</span><span class="n">ang_bin</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">180</span><span class="p">)</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ang_i</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">180.0</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">))</span><span class="o">*</span><span class="n">dist</span>
+            <span class="n">new</span> <span class="o">*=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ang_i</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">180.0</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">,</span><span class="n">new</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;scaled by cos($\theta_i$)sin($\theta_i$)/cos($\theta_m$)sin($\theta_m$)&quot;</span><span class="p">)</span>
+            
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\theta$&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Counts&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;grey&quot;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">return</span></div>
+
+   
+<div class="viewcode-block" id="ProcessSpherical.load_response">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.load_response">[docs]</a>
+    <span class="k">def</span> <span class="nf">load_response</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load response file and corresponding normalization.</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        Currently there are 5 different histograms used for </span>
+<span class="sd">        analyzing the sims. It might be better to combine these to a single file. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span> <span class="o">=</span> <span class="n">Histogram</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;primary_rsp.hdf5&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons</span> <span class="o">=</span> <span class="n">Histogram</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;starting_photons.hdf5&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons_rsp</span> <span class="o">=</span> <span class="n">Histogram</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;starting_photons_rsp.hdf5&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons</span> <span class="o">=</span> <span class="n">Histogram</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;measured_photons.write.hdf5&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measured_photons_rsp</span> <span class="o">=</span> <span class="n">Histogram</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;measured_photons_rsp.hdf5&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_binning_info</span><span class="p">()</span>
+
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="ProcessSpherical.get_total_edisp_matrix">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.get_total_edisp_matrix">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_total_edisp_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta_bin</span><span class="p">,</span> <span class="n">show_sanity_checks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">make_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rsp_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the energy dispersion matrix. </span>
+<span class="sd">        </span>
+<span class="sd">        The total energy dispersion is the sum of the transmitted </span>
+<span class="sd">        photons (which don&#39;t scatter) and the scattered photons. </span>
+<span class="sd">        Here I calculate all three: transmitted, scattered, and total. </span>
+<span class="sd">        Likewise, I calculate the transmission probability for all three. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta_bin : int</span>
+<span class="sd">            Index of incident angle. </span>
+<span class="sd">        show_sanity_checks : bool, optional </span>
+<span class="sd">            Print a comparison of total energy dispersion</span>
+<span class="sd">            to summed energy dispersion (beam + scattered), and also for </span>
+<span class="sd">            transmission probability, to verify that they are the same. </span>
+<span class="sd">            Default is False.</span>
+<span class="sd">        make_plots : bool, optional </span>
+<span class="sd">            Show plots (default is True).</span>
+<span class="sd">        rsp_file : bool, optional </span>
+<span class="sd">            Option to load resonse from hdf5 file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Option to load response from file:</span>
+        <span class="k">if</span> <span class="n">rsp_file</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_response</span><span class="p">(</span><span class="n">rsp_file</span><span class="p">)</span>
+
+        <span class="c1"># Normalize response:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize_response</span><span class="p">()</span>
+
+        <span class="c1"># Make transmitted edisp array:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_beam</span><span class="p">,</span> \
+        <span class="bp">self</span><span class="o">.</span><span class="n">tp_beam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_edisp_matrix</span><span class="p">(</span><span class="n">theta_bin</span><span class="p">,</span><span class="n">comp</span><span class="o">=</span><span class="s2">&quot;transmitted&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Save TP Beam to file:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;energy[keV]&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">emean</span><span class="p">,</span><span class="s2">&quot;TP&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">tp_beam</span><span class="p">}</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">d</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;energy[keV]&quot;</span><span class="p">,</span><span class="s2">&quot;TP&quot;</span><span class="p">])</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;tp_beam.dat&quot;</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Make scattered edisp array:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_scattered</span><span class="p">,</span> \
+        <span class="bp">self</span><span class="o">.</span><span class="n">tp_scattered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_edisp_matrix</span><span class="p">(</span><span class="n">theta_bin</span><span class="p">,</span><span class="n">comp</span><span class="o">=</span><span class="s2">&quot;scattered&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Make total edisp array:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_total</span><span class="p">,</span> \
+        <span class="bp">self</span><span class="o">.</span><span class="n">tp_total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_edisp_matrix</span><span class="p">(</span><span class="n">theta_bin</span><span class="p">,</span><span class="n">comp</span><span class="o">=</span><span class="s2">&quot;total&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Calculate total as sum of beam and scattered (sanity check):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_summed</span> <span class="o">=</span> \
+        <span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_beam</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_scattered</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_summed</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_total</span>
+        <span class="k">if</span> <span class="n">show_sanity_checks</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;difference b/n total and summed edisp arrays:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tp_summed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tp_beam</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">tp_scattered</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tp_summed</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">tp_total</span>
+            <span class="nb">print</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;difference b/n total and summed TP arrays:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">()</span>
+ 
+        <span class="k">if</span> <span class="n">make_plots</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+            <span class="c1"># Plot edisp:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;plotting transmitted edisp matrix...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_edisp_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_beam</span><span class="p">,</span>\
+                    <span class="s2">&quot;edisp_matrix_beam.png&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;plotting scattered edisp matrix...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_edisp_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_scattered</span><span class="p">,</span>\
+                    <span class="s2">&quot;edisp_matrix_scattered.png&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;plotting total edisp matrix...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_edisp_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_total</span><span class="p">,</span>\
+                    <span class="s2">&quot;edisp_matrix_total.png&quot;</span><span class="p">)</span>
+       
+            <span class="c1"># Plot transmission probability:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_tp_from_edisp</span><span class="p">()</span>
+
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="ProcessSpherical.normalize_response">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.normalize_response">[docs]</a>
+    <span class="k">def</span> <span class="nf">normalize_response</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Normalizes the atmospheric response matrix by the total </span>
+<span class="sd">        photons thrown in E_i and theta_i. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+     
+        <span class="c1"># Normalization factor:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">starting_photons_rsp</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        
+        <span class="c1"># Set 0 bins to arbitrary large number to avoid division by 0:</span>
+        <span class="n">N</span><span class="p">[</span><span class="n">N</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e12</span>
+        
+        <span class="c1"># Normalize:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span> <span class="o">/</span> <span class="n">N</span><span class="p">[:,</span><span class="kc">None</span><span class="p">,:,</span><span class="kc">None</span><span class="p">]</span>
+         
+        <span class="k">return</span></div>
+
+    
+<div class="viewcode-block" id="ProcessSpherical.make_edisp_matrix">
+<a class="viewcode-back" href="../../../api/response.html#cosi_atmosphere.response.ProcessSpherical.make_edisp_matrix">[docs]</a>
+    <span class="k">def</span> <span class="nf">make_edisp_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta_bin</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="s2">&quot;total&quot;</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make energy dispersion matrix.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta_bin : int </span>
+<span class="sd">            index of incident angle.</span>
+<span class="sd">        comp : str, optional</span>
+<span class="sd">            Component to use for constructing matrix. Either </span>
+<span class="sd">            transmitted, scattered, or total (default is total). </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Geometeric correction factor:</span>
+        <span class="n">make_geo_correction</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">geo_correction_cos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">180.0</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">)</span>
+        <span class="n">geo_correction_sin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">180.0</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">)</span>
+
+        <span class="c1"># Project onto em, ei:</span>
+        <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="s2">&quot;transmitted&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edisp_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">slice</span><span class="p">[{</span><span class="s2">&quot;theta_i [deg]&quot;</span><span class="p">:</span><span class="n">theta_bin</span><span class="p">,</span> 
+                <span class="s2">&quot;theta_m [deg]&quot;</span><span class="p">:</span><span class="n">theta_bin</span><span class="p">}]</span><span class="o">.</span><span class="n">project</span><span class="p">([</span><span class="s2">&quot;Em [keV]&quot;</span><span class="p">,</span> <span class="s2">&quot;Ei [keV]&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">contents</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edisp_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edisp_array</span><span class="p">)</span> 
+
+        <span class="n">max_theta_bin</span> <span class="o">=</span> <span class="mi">21</span> <span class="c1">#20 #25</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;max theta: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">incident_ang_centers</span><span class="p">[</span><span class="n">max_theta_bin</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="s2">&quot;scattered&quot;</span><span class="p">:</span>
+            <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">max_theta_bin</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">!=</span> <span class="n">theta_bin</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">counter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">this_edisp_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">slice</span><span class="p">[{</span><span class="s2">&quot;theta_i [deg]&quot;</span><span class="p">:</span><span class="n">theta_bin</span><span class="p">,</span> 
+                            <span class="s2">&quot;theta_m [deg]&quot;</span><span class="p">:</span><span class="n">i</span><span class="p">}]</span><span class="o">.</span><span class="n">project</span><span class="p">([</span><span class="s2">&quot;Em [keV]&quot;</span><span class="p">,</span> <span class="s2">&quot;Ei [keV]&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">contents</span>
+                        <span class="k">if</span> <span class="n">make_geo_correction</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                            <span class="n">this_edisp_array</span> <span class="o">*=</span> <span class="p">(</span><span class="n">geo_correction_cos</span><span class="p">[</span><span class="n">theta_bin</span><span class="p">]</span><span class="o">/</span><span class="n">geo_correction_cos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                            <span class="n">this_edisp_array</span> <span class="o">*=</span> <span class="p">(</span><span class="n">geo_correction_sin</span><span class="p">[</span><span class="n">theta_bin</span><span class="p">]</span><span class="o">/</span><span class="n">geo_correction_sin</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">edisp_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">this_edisp_array</span><span class="p">)</span> 
+                        <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">counter</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">this_edisp_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_rsp</span><span class="o">.</span><span class="n">slice</span><span class="p">[{</span><span class="s2">&quot;theta_i [deg]&quot;</span><span class="p">:</span><span class="n">theta_bin</span><span class="p">,</span> 
+                            <span class="s2">&quot;theta_m [deg]&quot;</span><span class="p">:</span><span class="n">i</span><span class="p">}]</span><span class="o">.</span><span class="n">project</span><span class="p">([</span><span class="s2">&quot;Em [keV]&quot;</span><span class="p">,</span> <span class="s2">&quot;Ei [keV]&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">contents</span>
+                        <span class="k">if</span> <span class="n">make_geo_correction</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                            <span class="n">this_edisp_array</span> <span class="o">*=</span> <span class="p">(</span><span class="n">geo_correction_cos</span><span class="p">[</span><span class="n">theta_bin</span><span class="p">]</span><span class="o">/</span><span class="n">geo_correction_cos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                            <span class="n">this_edisp_array</span> <span class="o">*=</span> <span class="p">(</span><span class="n">geo_correction_sin</span><span class="p">[</span><span class="n">theta_bin</span><span class="p">]</span><span class="o">/</span><span class="n">geo_correction_sin</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">edisp_array</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">this_edisp_array</span><span class="p">)</span> 
+
+        <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="s2">&quot;total&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edisp_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_beam</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">normed_edisp_array_scattered</span>
+        
+        <span class="c1"># Transmission probability:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edisp_array</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">edisp_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tp</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Chris Karwin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

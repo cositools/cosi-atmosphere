@@ -6,15 +6,16 @@ class Simulate:
  
     def run_sim(self, source_file, seed=0, verbosity=1):
 
-        """
-        Run atmospheric sims.
+        """Run atmospheric sims.
         
-        inputs:
-        
-        source_file: Cosima source file.
-        
-        seed[int]: Option to pass seed to cosima. 
-        Default is no seed. 
+        Parameters
+        ----------
+        source_file : str
+            Cosima source file.
+        seed : int, optional
+            Option to pass seed to cosima (default is no seed). 
+        verbosity : int, optional
+            Output level of cosima (default is 1).
         """
 
         if seed != 0:
@@ -27,16 +28,16 @@ class Simulate:
 
     def parse_sim_file(self, sim_file, unique=True):
 
-        """
-        Parse sim file. 
+        """Parse sim file. 
 
-        Inputs:
-        
-        sim_file: cosima sim file. 
-        
-        unique: A photon may cross the detecting volume numerous times.
-        To only count the first pass, set unique=True (defualt). 
-        If false, will count all passes. 
+        Parameters
+        ----------
+        sim_file : str 
+            Cosima sim file. 
+        unique : bool 
+            A photon may cross the detecting volume numerous times.
+            To only count the first pass, set unique=True (defualt). 
+            If false, will count all passes. 
         """
 
         # initiate lists:
@@ -135,3 +136,5 @@ class Simulate:
         df.to_csv("event_list.dat",float_format='%10.9e',index=False,sep="\t",\
                 columns=["id","em[keV]","xm[cm]","ym[cm]","zm[cm]",
                     "xdm[cm]","ydm[cm]","zdm[cm]"])
+
+        return

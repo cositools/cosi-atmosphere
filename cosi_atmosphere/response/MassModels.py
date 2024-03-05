@@ -11,15 +11,15 @@ class MakeMassModels:
 
     def __init__(self, atmosphere_file, kwargs={}):
 
-        """
-        Generates a mass model based on input atmospheric data.
+        """Generates a mass model based on input atmospheric data.
 
-        Inputs:
-        
-        atmosphere_file: input file describing the atmosphere, 
-        calculated with Atmospheric_profile class, based on NRLMSIS. 
-        
-        kwargs: pass any kwargs to pandas read_csv method. 
+        Parameters
+        ----------
+        atmosphere_file : str
+            Input file describing the atmosphere, calculated with 
+            Atmospheric_profile class, based on NRLMSIS. 
+        kwargs : dict, optional 
+            Pass any kwargs to pandas read_csv method. 
         """
         
         # Get test directory:
@@ -51,13 +51,16 @@ class MakeMassModels:
    
     def get_cart_vectors(self, angle, altitude, beam_alt=200):
         
-        """
-        Get x position and direction vectors for off-axis beam.
+        """Get x position and direction vectors for off-axis beam.
         
-        Inputs:
-        angle: incident angle of source in degrees. 
-        altitude: altitude of detecting plane in km.
-        beam_alt: altitude at which the beam is placed. Default is 200 km. 
+        Parameters
+        ----------
+        angle : float 
+            Incident angle of source in degrees. 
+        altitude : float 
+            Altitude of detecting plane in km.
+        beam_alt : float, optional
+            Altitude at which the beam is placed in km (default is 200 km). 
         """
 
         conv = math.pi/180.0
@@ -79,12 +82,13 @@ class MakeMassModels:
 
     def plot_atmosphere(self, show_comparison=False):
 
-        """
-        Plot atmosphere model. 
+        """Plot atmosphere model. 
         
-        Inputs:
-        show_comparison (optional) If true, compare normalized atmospheric 
-        components to original calculation from AZ. Default is False.
+        Parameters
+        ----------
+        show_comparison : bool, optional 
+            If true, compare normalized atmospheric components to original 
+            calculation from AZ (default is False).
         """
 
         # plot elements:
@@ -164,19 +168,21 @@ class MakeMassModels:
 
     def rectangular_model(self,watch_height):
         
-        """
-        Original rectangular mass model by AZ, 
+        """Original rectangular mass model by AZ, 
         from MEGAlib/resource/examples/advanced/Atmosphere. 
+        
         This is also similar to what was done by Alex Lowell. 
-        The model consists of recangular atmoshperic slabs. 
+        The model consists of rectangular atmoshperic slabs. 
         There is a very tiny surrounding sphere placed at the
         top of the atmoshpere, although this is not used for a 
         unifrom beam source. The watched volume is the entire 
         slab starting at the specified watch_height. The source 
         is a narrow beam with radius = 1cm. 
 
-        Inputs:
-        watch_height: altitude for watched volume in km. 
+        Parameters
+        ----------
+        watch_height : float 
+            Altitude for watched volume in km. 
             The actual volume will be a box starting at the 
             specified value, with a height equal to the spacing
             specified in the atmospheric model. 
@@ -256,12 +262,13 @@ class MakeMassModels:
 
     def spherical_model(self, watch_alt):
 
-        """
-        Model consists of concentric spherical shells, 
+        """Model consists of concentric spherical shells, 
         enclosed by a large surrounding sphere. 
         
-        Inputs:
-        watch_alt: altitude for watched volume in km. 
+        Parameters
+        ----------
+        watch_alt : float 
+            Altitude for watched volume in km. 
             The actual volume will be a shell with the inner radius
             starting at the specified value, and a height equal to the spacing
             specified in the atmospheric model. 
@@ -359,4 +366,3 @@ class MakeMassModels:
         f.close()
 
         return
-

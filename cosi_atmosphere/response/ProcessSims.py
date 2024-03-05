@@ -22,16 +22,18 @@ class Process:
     def __init__(self, theta, all_events_file="all_thrown_events.dat", \
             measured_events_file="event_list.dat"):
     
-        """
-        Analyze atmophere simulations.
+        """Analyze atmophere simulations.
         
-        Inputs:
-        
-        theta: Off-axis angle of source in degrees.
-        
-        Note: Both input files are outputs from ParseSims:
-        all_events_file: Event file with all thrown events. 
-        measured_events_file: Event file with all measured events. 
+        Parameters
+        ----------
+        theta : float 
+            Off-axis angle of source in degrees.
+        all_events_file : str, optional 
+            Event file with all thrown events (default is output 
+            from ParseSims method). 
+        measured_events_file : str, optional 
+            Event file with all measured events (default is output 
+            from ParseSims method). 
         """
         
         # Get test directory:
@@ -90,13 +92,26 @@ class Process:
 
     def dot_product(self, v1, v2):
         
-        """
-        Dot product of two vectors, v1 and v2.
-        
-        Input vector arrays must have shape 
+        """Calculates dot product of two vectors, v1 and v2.
+         
+        Parameters
+        ----------
+        v1 : array
+            First vector.
+        v2 : array
+            Second vector.
+
+        Note
+        ----
+        Input vector arrays must have shape
         (rows, cols) = (N,3),
         where cols is x,y,z coordinates,
         and rows is number of vectors.
+
+        Returns
+        -------
+        dp : float
+            Dot product of v1 and v2. 
         """
       
         # For array with multiple vectors:
@@ -111,21 +126,45 @@ class Process:
     
     def length(self, v):
         
-        """length of vector, v."""
+        """Calculates length of vector.
+        
+        Parameters
+        ----------
+        v : array
+            Input vector.
+
+        Returns
+        -------
+        float
+            Vector length. 
+        """
         
         return np.sqrt(self.dot_product(v,v))
     
     def angle(self, v1, v2):
         
-        """
-        Angle between two vectors, in radians.
+        """Calculates angle between two vectors, in radians.
 
+        Parameters
+        ----------
+        v1 : array
+            First vector. 
+        v2 : array
+            Second vector.
+        
+        Note
+        ----
         Input vector arrays must have shape 
         (rows, cols) = (N,3),
         where cols is x,y,z coordinates,
         and rows is number of vectors. 
-        """
         
+        Returns
+        -------
+        angle : float
+            Angle in radians. 
+        """
+
         arg = self.dot_product(v1,v2)/(self.length(v1)*self.length(v2))
         
         # Need to round to limited decimal places, 
@@ -137,18 +176,38 @@ class Process:
         return angle
 
     def bin_sim(self, elow=10, ehigh=10000, num_ebins=24,\
-            rlow=1e-7, rhigh=1000, num_rbins=120):
+            rlow=1e-7, rhigh=1000, num_rbins=120, 
+            starting_ph_output='starting_photons.hdf5',
+            measured_ph_output='measured_photons.hdf5'):
 
-        """
-        Construct main histogram.
-
-        Inputs:
-        elow: Lower energy bound in keV. Defualt is 100 keV. 
-        ehigh: Upper energy bound in keV. Default is 10000 keV (10 MeV).
-        num_ebins: Number of energy bins to use. Only log binning for now. 
-        rlow: Lower radial bound in km. 
-        rhigh: Upper radial bound in km.
-        num_rbins: Number of radial bins to use.
+        """Bins the simulations, and writes output files 
+        for both starting and measured photons. 
+           
+        Events are weigthed by the ratio of the cosine of incident 
+        angle to cosine of measured angle. This is a geometric 
+        correction factor to account for the effect of the projected area.
+        
+        Parameters
+        ---------
+        elow : float, optional
+            Lower energy bound in keV (defualt is 10 keV). 
+        ehigh : float, optional 
+            Upper energy bound in keV (default is 10000 keV).
+        num_ebins : int, optional 
+            Number of energy bins to use (default is 24). Only log 
+            binning for now. 
+        rlow : float, optional 
+            Lower radial bound in km (default is 1e-7). 
+        rhigh : float, optional
+            Upper radial bound in km (default is 1000).
+        num_rbins : int, optional
+            Number of radial bins to use (default is 120).
+        starting_ph_output : str, optional
+            Name of output file for starting photons binned histogram 
+            (default is 'starting_photons.hdf5'). 
+        measured_ph_output : str, optional
+            Name of output file for measured photons binned histogram
+            (default is 'measured_photons.hdf5'). 
         """
         
         # Define energy bin edges:
@@ -181,24 +240,24 @@ class Process:
                 self.xyi_bins, self.xyi_bins], \
                 labels=["Ei [keV]", "ri [km]", "xi [cm]", "yi [cm]"])
         self.starting_photons.fill(self.ei, self.ri, self.xi, self.yi)
-        self.starting_photons.write('starting_photons.hdf5', overwrite=True)
+        self.starting_photons.write(starting_ph_output, overwrite=True)
 
-        # Make histogram for measured photons:
+        # Make un-weighted histogram,
+        # used for comparison.
+        self.measured_photons_baseline = Histogram([self.energy_bin_edges, self.radial_bins, \
+                self.xym_bins, self.xym_bins, self.incident_ang_bins],\
+                labels=["Em [keV]", "rm [km]", "xm [cm]", "ym [cm]", "theta_prime [deg]"])
+        self.measured_photons_baseline.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle, 
+                weight=np.cos(np.deg2rad(self.theta))/np.cos(np.deg2rad(self.incident_angle)))
+        self.measured_photons_baseline.write(measured_ph_output, overwrite=True)
+        
+        # Make weighted histogram.
         self.measured_photons = Histogram([self.energy_bin_edges, self.radial_bins, \
                 self.xym_bins, self.xym_bins, self.incident_ang_bins],\
                 labels=["Em [keV]", "rm [km]", "xm [cm]", "ym [cm]", "theta_prime [deg]"])
-        self.measured_photons.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle)
-        self.measured_photons.write('measured_photons.hdf5', overwrite=True)
-
-        # Make weighted histogram.
-        # Events are weigthed by the cos of the incident angle. 
-        # This is a geometric correction factor to account for simulating 
-        # a disk collection area as opposed to spherical region;
-        # however, it is not needed for the infinite planar collection area. 
-        self.measured_photons_weighted = Histogram([self.energy_bin_edges, self.radial_bins, \
-                self.xym_bins, self.xym_bins, self.incident_ang_bins],\
-                labels=["Em [keV]", "rm [km]", "xm [cm]", "ym [cm]", "theta_prime [deg]"])
-        self.measured_photons_weighted.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle, weight=1.0/np.cos(np.deg2rad(self.incident_angle)))
+        self.measured_photons.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle, 
+                weight=np.cos(np.deg2rad(self.theta))/np.cos(np.deg2rad(self.incident_angle)))
+        self.measured_photons.write(measured_ph_output, overwrite=True)
 
         # Get binning info:
         self.get_binning_info()
@@ -234,13 +293,18 @@ class Process:
     def load_response(self, starting_ph_file="starting_photons.hdf5",\
             measured_ph_file="measured_photons.hdf5"):
 
-        """
-        Load response files for starting and measured photons.
+        """Load response files for starting and measured photons.
 
-        Inputs:
-        starting_ph_file: binned histogram for staring photons.
-        measured_ph_file: binned histogram for measured photons.
-        Note: Defaul ph_files are the output from the bin_sim method.
+        Parameters
+        ----------
+        starting_ph_file : str, optional 
+            Binned histogram for staring photons (default is 'starting_photons.hdf5').
+        measured_ph_file : str, optional 
+            Binned histogram for measured photons (default is 'measured_photons.hdf5').
+        
+        Note
+        ----
+        Default photon files are the output from the bin_sim method.
         """
         
         self.starting_photons = Histogram.open(starting_ph_file)
@@ -250,20 +314,30 @@ class Process:
 
     def make_scattering_plots(self, starting_pos=True, measured_pos=True, \
             spec_i=True, radial_dist=True, theta_prime = True, \
-            theta_prime_em = True, rad_em = True, rad_ei = True, weighted = False):
+            theta_prime_em = True, rad_em = True, rad_ei = True, show_baseline = True):
 
-        """
-        Visualize the photon scattering.
+        """Visualize the photon scattering.
         
-        Optional inputs (True or False):
-        starting_pos: Scatter plot showing starting postions of all photons. 
-        measured_pos: Scatter plot showing measured postions of all photons.  
-        spec_i: Starting and measured photon spectrum. 
-        radial_dist: Radial distribution of measured photons. 
-        theta_prime: Incident angle distribution.
-        theta_prime_em: Incident angle versus measured energy.
-        rad_em: Radial distribution versus measured energy.
-        rad_ei: Radial distribution versus initial energy.
+        Parameters
+        ----------
+        starting_pos : bool, optional 
+            Scatter plot showing starting postions of all photons. 
+        measured_pos : bool, optional 
+            Scatter plot showing measured postions of all photons.  
+        spec_i : bool, optional 
+            Starting and measured photon spectrum. 
+        radial_dist : bool, optional 
+            Radial distribution of measured photons. 
+        theta_prime : bool, optional 
+            Incident angle distribution.
+        theta_prime_em : bool, optional
+            Incident angle versus measured energy.
+        rad_em : bool, optional
+            Radial distribution versus measured energy.
+        rad_ei : bool, optional
+            Radial distribution versus initial energy.
+        show_baseline : bool, optional
+            Option to show angular comparison to un-weighted histogram. 
         """
 
         # Define condition for unscattered photons:
@@ -339,11 +413,17 @@ class Process:
 
         # Distribution of theta prime for measured photons:
         if theta_prime == True:
-            self.measured_photons.project("theta_prime [deg]").plot()
+            if show_baseline == True:
+                dist = self.measured_photons_baseline.project("theta_prime [deg]").contents
+                plt.plot(self.incident_ang_bins[1:],dist,color="blue",label="true")
+            dist = self.measured_photons.project("theta_prime [deg]").contents
+            plt.plot(self.incident_ang_bins[1:],dist,color="red",label=r"scaled by cos($\theta_i$)/cos($\theta_m$)")
             plt.yscale("log")
             plt.ylabel("counts")
+            plt.xlabel(r"$\theta$")
             plt.xlim(0,100)
             plt.grid(ls="--",color="grey",alpha=0.3)
+            plt.legend(loc=1)
             plt.savefig("theta_prime_dist.png")    
             plt.show()
             plt.close()
@@ -355,50 +435,6 @@ class Process:
             plt.xlim(1e2,1e4)
             plt.ylim(0,100)
             plt.savefig("thetaprime_energy_m_dist.png")
-            plt.show()
-            plt.close()
-
-        # Plots for histograms weighted by incident angle:
-        if weighted == True:
-            
-            # Plot theta prime distribution versus measured energy:
-            self.measured_photons_weighted.project(["Em [keV]","theta_prime [deg]"]).plot(norm=mpl.colors.LogNorm())
-            plt.xscale("log")
-            plt.xlim(1e2,1e4)
-            plt.ylim(0,100)
-            plt.savefig("weighted_thetaprime_energy_m_dist.png")
-            plt.show()
-            plt.close()
-
-            # Calculate percent diff b/n weighted and un-weighted
-            uw = np.array(self.measured_photons.project(["Em [keV]","theta_prime [deg]"]))
-            w = np.array(self.measured_photons_weighted.project(["Em [keV]","theta_prime [deg]"]))
-            p_diff = (w - uw) / uw
-            p_diff[np.isnan(p_diff)] = 1e-12
-
-            # Plot percent diff:
-            fig = plt.figure()
-            ax = plt.gca()
-            img = ax.pcolormesh(self.energy_bin_edges, self.incident_ang_bins, p_diff.T, \
-                    cmap="viridis", norm=colors.LogNorm(vmin=1e-2, vmax=10))
-            ax.set_xscale('log')
-            cbar = plt.colorbar(img,fraction=0.045)
-            cbar.set_label("percent diff")
-            plt.xlabel("Em [keV]")
-            plt.ylabel("theta_prime [deg]")
-            plt.xlim(1e2,1e4)
-            plt.ylim(0,90)
-            plt.savefig("weighted_p_diff.png")
-            plt.show()
-            plt.close()
-
-            # Plot distribution of theta prime for measured photons:
-            self.measured_photons_weighted.project("theta_prime [deg]").plot()
-            plt.yscale("log")
-            plt.ylabel("counts")
-            plt.xlim(0,100)
-            plt.grid(ls="--",color="grey",alpha=0.3)
-            plt.savefig("weighted_theta_prime_dist.png")
             plt.show()
             plt.close()
 
@@ -425,84 +461,12 @@ class Process:
 
         return
 
-    def _compton_rainbow(self):
-
-        '''Trying to make Albert's Compton rainbow.'''
-
-        # Compton rainbow (using healpy):
-            
-        # Photons b/n 100 - 105 keV
-        idi_array = np.array(self.idi)
-        idm_array = np.array(self.idm)
-        keep_index = np.isin(idi_array,idm_array)
-        ei_array = np.array(self.ei)[keep_index]
-        em_array = np.array(self.em)
-        lon_array = np.array(self.lon_dir)
-        lat_array = np.array(self.lat_dir)
-        incident_array = np.array(self.incident_angle) * (np.pi/180) # radians
-        weights = np.cos(incident_array)
-
-        # Select measured energies:
-        src_index = (ei_array >= 2000) & (ei_array < 10000)
-        this_index = (em_array >= 1000) & (em_array < 1500) & (src_index)
-
-        # Define map resolution:
-        nside = 8
-        print("Approximate resolution at NSIDE {} is {:.2} deg".format(nside, hp.nside2resol(nside, arcmin=True) / 60))
-        
-        # Make healpix map:
-        npix = hp.nside2npix(nside)
-        pixs = hp.ang2pix(nside,lon_array[this_index],lat_array[this_index],lonlat=True)
-        unique, unique_counts = np.unique(pixs, return_counts=True)
-        m = np.zeros(npix)
-        m[unique] = unique_counts
-
-        # Get weights:
-        angs = hp.pix2ang(nside,unique,lonlat=True)
-       
-        # Option 0 for plotting:
-        src_index0 = (ei_array >= 1000) & (ei_array < 1500)
-        this_index0 = (em_array >= 1000) & (em_array < 1500) & (src_index0)
-        src_index1 = (ei_array >= 1500) & (ei_array < 2000)
-        this_index1 = (em_array >= 1000) & (em_array < 1500) & (src_index1)
-        src_index2 = (ei_array >= 2000) & (ei_array < 10000)
-        this_index2 = (em_array >= 1000) & (em_array < 1500) & (src_index2)
-        
-        
-        plt.hist2d(lon_array[this_index2],lat_array[this_index2],alpha=1,bins=50,vmax=0.5,cmap="Greens")
-        plt.hist2d(lon_array[this_index1],lat_array[this_index1],alpha=0.7,bins=50,cmap="Reds")
-        plt.hist2d(lon_array[this_index0],lat_array[this_index0],alpha=0.4,cmin=0.5,vmax=0.9,bins=50,cmap="Blues")
-        plt.show()
-        sys.exit()
-
-        # Option 1 for plotting:
-        #hp.mollview(m, title="Compton Rainbow", unit="counts", norm="hist", cmap="inferno")
-        
-        # Option 2 for plotting:
-        projview(m,
-        coord=["C"],
-        graticule=True,
-        graticule_labels=True,
-        unit="counts",
-        xlabel="Longitude",
-        ylabel="Elevation",
-        max=np.amax(unique_counts)/3.0,
-        norm="hist",
-        cmap="inferno",
-        cb_orientation="horizontal",
-        projection_type="cart")
-    
-        plt.show()
-        sys.exit()
-
-        return
-
     def calc_tp(self, show_plot=True):
 
-        """
-        Calculate the transmission probability. This gives the 
-        probability that a photon of a given energy will pass 
-        the atmosphere without being scattered, and thus cross 
+        """Calculate the transmission probability. 
+        
+        This gives the probability that a photon of a given energy 
+        will pass the atmosphere without being scattered, and thus cross 
         the detecting volume. The transmitted photons do not
         scatter, and thus there is no corresponding energy 
         dispersion. However, the transmission probability does not 
@@ -510,12 +474,19 @@ class Process:
         from off-axis angles. These photons will produce a significant 
         energy dispersion.
 
-        Note: The transmission probability is a function of energy 
-        and off-axis angle of the source.
+        Parameters
+        ----------
+        show_plot : bool, optional
+            Option to plot transmission probability and compare to 
+            original calculation.
         
-        Inputs:
-        show_plot: Option to plot transmission probability and compare 
-        to original calculations.
+        Notes
+        -----
+        The transmission probability is a function of energy 
+        and off-axis angle of the source.
+
+        The transmission probability can also be calculated using
+        the get_total_edisp_matrix method, which is preferred. 
         """
         
         # Only use photons that do not scatter.
@@ -564,10 +535,14 @@ class Process:
 
     def get_tp_from_file(self):
 
-        """
-        Read original transmission probability from numpy array (for 33 km).
+        """Read original transmission probability from numpy array (for 33 km).
         This has been used for past COSI studies, including DC1, and it's
         included here for a sanity check. 
+        
+        Returns
+        -------
+        tp_energy, tp_array : list, array
+            list of energies and array of TP values, respectively.
         """
 
         # Transmission probability:
@@ -589,30 +564,31 @@ class Process:
         try:
             return_index = np.where(theta_list == self.theta)[0][0]
         except:
-            print("WARNING: Incident anlge is not in test list. Using 0 degrees.")
+            print("WARNING: Incident angle is not in test list. Using 0 degrees.")
             return_index = 0
         
         return tp_energy, tp_array[return_index]
 
     def get_total_edisp_matrix(self, show_sanity_checks=False, make_plots=True):
 
-        """
-        Get the energy dispersion matrix. The total energy dispersion
-        is the sum of the beam photons (which don't scatter) and the
-        scattered photons. Here I calculate all three: beam, scattered, 
-        and total. Likewise, I calculate the transmission probability for 
-        all three. 
+        """Get the energy dispersion matrix. 
+        
+        The total energy dispersion is the sum of the beam photons 
+        (which don't scatter) and the scattered photons. Here I calculate 
+        all three: beam, scattered, and total. Likewise, I calculate the 
+        transmission fraction for all three. 
 
-        Inputs:
-        show_sanity_checks: Print a comparison of total energy dispersion
-        to summed energy dispersion (beam + scattered), and also for 
-        transmission probability, to verify that they are the same. 
-
-        make_plots: Show plots. 
+        Parameters
+        ----------
+        show_sanity_checks : bool, optional 
+            Print a comparison of total energy dispersion to summed 
+            energy dispersion (beam + scattered), and also for transmission 
+            probability, to verify that they are the same (default is False). 
+        make_plots : bool, optional 
+            Show plots (default is True). 
         """
         
         # Define condition for beam and scattered component:
-        #condition = self.rm <= 1e-5 # only events within beam (1cm)
         theta_low = self.theta - 0.2
         theta_high = self.theta + 0.2
         condition = (self.incident_angle > theta_low) & (self.incident_angle < theta_high)
@@ -631,17 +607,19 @@ class Process:
         df.to_csv("tp_beam.dat",sep="\t",index=False)
 
         # Make scattered edisp array:
-        idm_watch = self.idm[~condition]
-        em_watch = self.em[~condition]
-        ia_watch = self.incident_angle[~condition]
+        new_condition = ~condition & (self.incident_angle<88)
+        idm_watch = self.idm[new_condition]
+        em_watch = self.em[new_condition]
+        ia_watch = self.incident_angle[new_condition]
         self.edisp_array_scattered, \
         self.normed_edisp_array_scattered,\
         self.tp_scattered = self.make_edisp_matrix(idm_watch, em_watch, ia_watch)
 
         # Make total edisp array:
-        idm_watch = self.idm
-        em_watch = self.em
-        ia_watch = self.incident_angle
+        condition = self.incident_angle<88
+        idm_watch = self.idm[condition]
+        em_watch = self.em[condition]
+        ia_watch = self.incident_angle[condition]
         self.edisp_array_total, \
         self.normed_edisp_array_total,\
         self.tp_total = self.make_edisp_matrix(idm_watch, em_watch, ia_watch, write_hist=True)
@@ -674,15 +652,18 @@ class Process:
 
         return
 
-    def make_edisp_matrix(self, idm_watch, em_watch, ia_watch, write_hist=False):
+    def make_edisp_matrix(self, idm_watch, em_watch, write_hist=False):
 
-        """
-        Make energy dispersion matrix.
+        """Make energy dispersion matrix.
 
-        Inputs:
-        idm_watch: IDs of measured photons for watched region.
-        em_watch: Energy histogram of photons for watched region.
-        write_hist: Option to save histogram to hdf5.
+        Parameters
+        ----------
+        idm_watch : ArrayLike 
+            IDs of measured photons for watched region.
+        em_watch : ArrayLike 
+            Energy histogram of photons for watched region.
+        write_hist : bool
+            Option to save histogram to hdf5.
         """
 
         # Make edisp array:
@@ -690,10 +671,7 @@ class Process:
         transmitted_events = Histogram([self.energy_bin_edges, self.energy_bin_edges, self.incident_ang_bins],\
                 labels=["Ei [keV]", "Em [keV]", "theta_prime [deg]"])
         transmitted_events.fill(self.ei[transmitted_index], em_watch, ia_watch)
-        
-        # For testing only:
-        #transmitted_events.fill(self.ei[transmitted_index], em_watch, ia_watch,  weight=1.0/np.cos(np.deg2rad(ia_watch)))
-        
+         
         # Save response matrix:
         if write_hist == True:
             transmitted_events.write('atm_response.hdf5', overwrite=True)
@@ -749,12 +727,10 @@ class Process:
         plt.semilogx(self.emean, self.tp_total, marker="o", ls="--", label="Total")
         plt.semilogx(self.emean, self.tp_beam, marker="s", ls="-", label="Transmitted")
         plt.semilogx(self.emean, self.tp_scattered, marker="^", ls=":", label="Scattered")
-        #plt.semilogx(e_official, tp_official, ls="-.", label="Official (33 km)")
         plt.xlabel("Ei [keV]", fontsize=14)
         plt.ylabel("Transmission Probability", fontsize=14)
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
-        plt.ylim(0,1.2)
         plt.legend(loc=2,ncol=1,frameon=False,fontsize=12)
         plt.grid(ls=":",color="grey",alpha=0.4)
         plt.savefig("transmission_probability_from_edisp.pdf")
@@ -765,23 +741,37 @@ class Process:
 
     def PL(self, E, p):
 
-        """
-        General PL spectral model, normalized to 1e-3 at 100 keV. 
+        """General PL spectral model, normalized to 1e-3 at 100 keV. 
 
-        Inputs:
-        E: energy in keV.
-        p: power of dN/dE. 
+        Parameters
+        ----------
+        E : float 
+            Energy in keV.
+        p : float 
+            Power of dN/dE. 
+        
+        Returns
+        -------
+        dn/de : float
+            Value at given energy. 
         """
+        
         return (1e-3)*(E/100.0)**(-1*p)
     
     def PL_interp(self, p):
     
-        """
-        Returns interpolated PL function for energies between 
+        """Returns interpolated PL function for energies between 
         100 keV to 10 MeV. 
 
-        inputs:
-        p: power of dN/dE 
+        Paramters
+        ---------
+        p : float
+            Power of dN/dE 
+
+        Returns
+        -------
+        pl_interp : scipy:interpolate:interp1d
+            Interpolated function. 
         """
 
         # Energy array b/n 100 keV to 10 MeV.
@@ -794,20 +784,20 @@ class Process:
 
     def ff_correction(self, model_flux, name, show_plots=True):
 
-        """
-        Calculate atmospheric correction factor by forward folding the 
+        """Calculate atmospheric correction factor by forward folding the 
         atmospheric energy dispersion with the model counts. 
 
         The energy dispersion matrices must first be generated via
         the 'get_total_edisp_matrix' method. 
 
-        inputs:
-        model_flux: interp1d object giving the model flux as a function 
-        of energy.
-
-        name: Name of saved files.
-
-        show_plots: Option to plot correction factor and ratio.
+        Parameters
+        ----------
+        model_flux : scipy:interpolate:interp1d
+            Interp1d object giving the model flux as a function of energy.
+        name : str 
+            Name of saved files.
+        show_plots : bool 
+            Option to plot correction factor and ratio.
         """
 
         # Get integrated counts for each energy bin:
