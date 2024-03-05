@@ -6,3 +6,4 @@ astropy
 healpy
 pymsis
 nbsphinx
+sphinx_rtd_theme
