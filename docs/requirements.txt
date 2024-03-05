@@ -2,7 +2,7 @@ pandas
 numpy
 matplotlib
 histpy
-scipy==1.0
+scipy
 astropy
 healpy
 pymsis
