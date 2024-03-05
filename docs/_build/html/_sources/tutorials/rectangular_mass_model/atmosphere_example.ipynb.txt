@@ -1,0 +1,362 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "677ac94f-98e0-4076-9826-7ce4240a478f",
+   "metadata": {},
+   "source": [
+    "# Simulating gamma-ray transport in the atmosphere with the cosi-atmosphere package \n",
+    "\n",
+    "Import the COSI atmosphere package"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6812472d-3da4-4797-aef0-7022aa979a07",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from cosi_atmosphere.response.AtmosphericProfile import Atmosphere\n",
+    "from cosi_atmosphere.response.MassModels import MakeMassModels\n",
+    "from cosi_atmosphere.response.RunSims import Simulate\n",
+    "from cosi_atmosphere.response.ProcessSims import Process\n",
+    "import numpy as np\n",
+    "import os"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0cb520be-c018-4372-8147-829c7e30f851",
+   "metadata": {},
+   "source": [
+    "## Make the Mass Model\n",
+    "The first step is to make an atmospheric model using the Atmosphere class. This provides an altitude density profile for the different species of the atmosphere. For the atmospheric model you need to specify the date, latitude and longitude, as well as the atmospheric spacing. Here we will use a spacing of 100 m.  "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "44e0bf8e-8d8d-4863-81cf-30546400de6c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "instance = Atmosphere()\n",
+    "date = np.array(['2016-06-13 12:00:00'], dtype=\"datetime64[h]\")\n",
+    "lat = -5.66\n",
+    "lon = -107.38\n",
+    "alts = np.linspace(0, 200, 2001) # km; spacing is 0.1 km (100 m) \n",
+    "atm_model = instance.get_atm_profile(\"rep_atm_model.dat\",date,lon,lat,alts)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5ac538ba-8e55-464f-96d3-de37156eb3a2",
+   "metadata": {},
+   "source": [
+    "Let's take a look at the first 5 lines of the output file to see what it contains:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ee2074c3-4627-49b6-bc70-08b721873e7e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "os.system(\"head -n 5 rep_atm_model.dat\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3965726a-3d47-4bdf-9194-96195b4d93d2",
+   "metadata": {},
+   "source": [
+    "Next we need to make a mass model of the atmosphere. This is done with the MakeMassModels class, which takes as input the atmospheric model calculated in the previous step. Let's first define an instance of the class and plot the atmospheric profile:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b44824af-8600-4273-b4a7-deb3434bf850",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "instance = MakeMassModels(\"rep_atm_model.dat\")\n",
+    "instance.plot_atmosphere()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b9d85675-81e9-4e9e-87fb-053de8da2f4e",
+   "metadata": {},
+   "source": [
+    "The left axis in the above plot shows the number density of the different atmospheric elements. The right axis shows the total mass density of all elements. Now let's define our mass model. Two options are available for this: rectangular and spherical. The simulations use a watched volume to detect all passing photons, and so we need to pass the altitude to use. Here we will use a rectangular geometry with a watched volume at 33 km."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "1a02ed8b-641c-482a-9dca-ee4cf9702524",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "instance.rectangular_model(33)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7c66c3af-64e0-4ce1-86bf-130d02363373",
+   "metadata": {},
+   "source": [
+    "The output is written to atmosphere.geo. Let's take a look at the first 40 lines:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "96165f0b-42ab-4079-a822-cdd9741209ea",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "os.system(\"head -n 40 atmosphere.geo\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c387d49a-0111-40c3-8299-844c512ba222",
+   "metadata": {},
+   "source": [
+    "You can see that each volume slice is a large rectangular slab with a half-width of 5000 cm. The material of each volume slice corresponds to the atmospheric profile. Now let's take a look at the last 20 lines of the geometry file:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "fc08885a-a8f4-4bbf-be66-7d81bb3ec9c6",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "os.system(\"tail -n 20 atmosphere.geo\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "73a762f2-b41f-4e1b-9a6b-f67b4ed0f053",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "The last block here is our watched volume (called TestVolume). Here we are watching VolumeSlice_330_331, which corresponds to the rectangular slab at an altitude of 33 km. In principle, we can let the watched volume be whatever we want. For example, to use a sphere with a radius of 100 cm within the same volume slice, you would replace the shape with: TestVolume.Shape Sphere 0 100. This option is not yet hard coded, so if a different watched volume is needed, you will have to do it by hand for now.</br>\n",
+    "\n",
+    "## Make the Source File\n",
+    "The other thing we need for the simulations is the source file. For the rectangular geometry we use a narrow beam, and an example file is provided: AtmospherePencilBeam.source. Let's take a look:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a84662eb-87d1-499d-a7df-4950cd844859",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "os.system(\"cat AtmospherePencilBeam.source\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e2c6c601-3309-44f7-a059-56450705748e",
+   "metadata": {},
+   "source": [
+    "For demonstration purposes we are only simulating 100,000 triggers. In practice, ~ 1 million - 5 million should provide sufficient statistics. Note: Even 100,000 triggers takes a long time. For an even faster test, try simulating just 1000 triggers. We have a homogeneous narrow beam (r = 1cm) placed on axis at the top of the atmosphere (200 km), which throws photons straight down. The spectrum is linear between 10 - 10000 keV. </br>\n",
+    "\n",
+    "The inputs for HomogeneousBeam are: x y z nx ny nz r. We can place the beam off-axis by changing x, nx, and nz. For example, suppose we want to do 50 degrees off axis with a watched altitude of 33 km. We can determine what values we need to use by running the following:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3e23468a-de73-4b08-a74e-ac9eabb93472",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "angle = 50.0 # degrees\n",
+    "altitude = 33.0 # km\n",
+    "instance.get_cart_vectors(angle, altitude)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "370730cd-b482-4c90-95a2-93a05017688a",
+   "metadata": {},
+   "source": [
+    "Replacing the corresponding inputs in the source file with these values will produce an off-axis source. </br>\n",
+    "\n",
+    "## Run the Simulations \n",
+    "Once we have the mass model and the source file, we can run the simulations. Let's define an instance of the Simulation class and make a short run:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "583b0dab-0b2b-4239-8eca-3fe48102b0b8",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "instance = Simulate()\n",
+    "instance.run_sim(\"AtmospherePencilBeam.source\", seed=3000, verbosity=0)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ec305037-4a4f-48b1-9979-bfa615a3309d",
+   "metadata": {},
+   "source": [
+    "The above command is a python wrapper for cosima, and it will produce the .sim file. Now let's parse the sim file. This will produce two .dat files: one with information for all thrown photons and another with information for all detected photons."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b8d7c7d7-1f3e-4f68-ab46-4faf5115a6a0",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "instance.parse_sim_file(\"Atmosphere_PencilBeam.inc1.id1.sim\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "77e6f6b3-19b8-47ad-9a6c-f985fdac93bf",
+   "metadata": {},
+   "source": [
+    "Let's take a look at the output format:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6982c01b-e7a3-481b-a301-844633ebaeac",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "os.system(\"head -n 5 all_thrown_events.dat\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a5c402f4-ef5f-4fce-a6a1-f6a43ffa58f0",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "os.system(\"head -n 5 event_list.dat\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "02460948-2bdd-405e-9630-224ea0d0e379",
+   "metadata": {},
+   "source": [
+    "Note that the first file has all the initial information, and the second file has all the measured information. </br>\n",
+    "\n",
+    "## Process the Simulations \n",
+    "Now we can process the simulations using the Process class. When defining an instance of the Process class we need to specify off-axis angle of the source. As a simple example, let's bin the data and make some diagnostic plots:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8b1566fa-274a-4384-b99a-ab001ff608f4",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "instance = Process(0)\n",
+    "instance.bin_sim()\n",
+    "instance.make_scattering_plots()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c46d1259-ae27-4e1c-b8a8-9f1dae6d345d",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "The statistics are not great since we only ran 100,000 triggers, but this gives an idea of the output. </br>\n",
+    "summary of output plots: </br>\n",
+    "plot 1: x y positions of starting photons  </br>\n",
+    "plot 2: x y positions of measured photons: blue = scatterd, black = un-scattered </br>\n",
+    "plot 3: spectrum of initial and measured photons </br>\n",
+    "plot 4: distribution of counts versus the radius from the center of the beam (rm) </br>\n",
+    "plot 5: distribution of counts versus the photon's incident angle (theta_prime) </br>\n",
+    "plot 6: projection of counts onto incident angle and measured energy (Em) axes </br>\n",
+    "plot 7: projection of counts onto rm and Em axes</br>\n",
+    "plot 8: projection of counts onto rm and initial energy (Ei) axes"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f5ce06f9-f54f-4d61-b9fb-dc4b6e3ac037",
+   "metadata": {},
+   "source": [
+    "## Get Atmospheric Response \n",
+    "Now let's get the atmospheric response. The first three outputs will show the energy dispersion matrices for the transmitted component, the scattered component, and the total (which is the sum of the transmitted and scattered components). The last output will show the transmissoin probability for all three components, which is the projection of the energy dispersion matrices onto the initial energy axis. See Karwin+23 for more details. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4efceb7e-368e-4aa8-abb7-bf2e5e839115",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "instance.get_total_edisp_matrix()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ec541695-7da1-4489-86a6-dca7bed583bc",
+   "metadata": {},
+   "source": [
+    "Finally, let's get the correction factor and correction factor ratio (also defined in Karwin+23). We'll use a power law spectral model with index 2."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3c87d0a7-9741-4372-9b0b-15cdb50deeb2",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model_flux=instance.PL_interp(2)\n",
+    "instance.ff_correction(model_flux,\"new_sims\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "COSIMain_u2",
+   "language": "python",
+   "name": "cosimain_u2"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.16"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

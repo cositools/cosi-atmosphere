@@ -20,22 +20,25 @@ from mhealpy import HealpixMap, HealpixBase
 from numpy.linalg import norm
 import h5py
 
-class Process(ProcessSims.Process):
+class ProcessSpherical(ProcessSims.Process):
 
-    def __init__(self, theta_bin, r_alt, all_events_file="all_thrown_events.dat", \
+    def __init__(self, theta, r_alt, all_events_file="all_thrown_events.dat", \
             measured_events_file="event_list.dat"):
     
-        """
-        Analyze atmophere simulations from spherical mass model.
+        """Analyze atmophere simulations from spherical mass model.
         
-        Inputs:
-        
-        theta_bin: incident angle bin. 
-        r_alt: altitude of observations in km. 
-
-        Note: Both input files are outputs from ParseSims:
-        all_events_file: Event file with all thrown events. 
-        measured_events_file: Event file with all measured events. 
+        Parameters
+        ----------
+        theta : float 
+            Incident angle in degrees. 
+        r_alt : float 
+            Altitude of observations in km. 
+        all_events_file : str, optional 
+            Event file with all thrown events (default is output 
+            from ParseSims method). 
+        measured_events_file : str, optional 
+            Event file with all measured events (default is output 
+            from ParseSims method).  
         """
         
         # Get test directory:
@@ -71,6 +74,7 @@ class Process(ProcessSims.Process):
         self.zdm = np.array(df["zdm[cm]"]) # measured z direction
  
         #  Define vector array for initial direction:
+        keep_index = np.isin(self.idi,self.idm)
         vi = np.array([self.xdi,self.ydi,self.zdi]).T
 
         # Define vector array for measured direction:
@@ -99,35 +103,77 @@ class Process(ProcessSims.Process):
         self.lon_dm = self.sp_coords_dm[2].deg # deg
 
         # Get points of intersection:
+        # Note: this isn't used anymore, but I'll
+        # keep it here for now, as well as corresponding
+        # functions, because it may be useful later on. 
         o = np.array([self.xi,self.yi,self.zi]).T # cm
         u = np.array([self.xdi,self.ydi,self.zdi]).T # cm
         r = (self.r_earth + self.r_alt) * 1e5 # cm
         intersecting_points = self.find_projection(o,u,r)
         
-        # Define surface normal for initial photons:
-        ni = -1*intersecting_points
+        # Define surface normal for measured photons:
         nm = -1*np.array([self.xm,self.ym,self.zm]).T
         
+        # Define surface normal for initial photons:
+        #
+        # With our simulation setup, this will actually 
+        # be the same as nm. However, in this scheme, 
+        # ni is undefined for photons that are not measured.
+        # Currently, undefined ni are being ignored,
+        # and this seems to give the correct solution. 
+        # The main calibration here is comparison with 
+        # the rectangular geometery, as well as comparison 
+        # to real atmospheric data. 
+        #
+        # We'll first define the array using initial positions,
+        # in order to get the right shape. Then we'll update values below.
+        ni = -1*np.array([self.xi,self.yi,self.zi]).T
+
+        # Set ni to nm for measured photons: 
+        keep_index = np.isin(self.idi,self.idm)
+        ni[keep_index] = nm
+    
         # Get incident angle for initial photons:
         self.incident_angle_i = self.angle(vi,ni)*(180/np.pi) # degrees
-        
+
+        # Set incident angle of un-measured photons to arbitrarily high angle:
+        print()
+        print("WARNING: Not all incident angles are defined.")
+        print("Number of undefined incident angles: " + str(len(self.incident_angle_i[~keep_index])))
+        print("Setting undefined incident angles to 400 degrees")
+        print()
+        self.incident_angle_i[~keep_index] = 1e6
+
         # Get incident angle for measured photons:
         self.incident_angle_m = self.angle(vm,nm)*(180/np.pi) # degrees
 
-        # Bin of incident angle:
-        self.theta = theta_bin
+        # Incident angle in degrees:
+        self.theta = theta
 
         return
 
     def dot_product(self, v1, v2):
         
-        """
-        Dot product of two vectors, v1 and v2.
-        
-        Input vector arrays must have shape 
+        """Calculates dot product of two vectors, v1 and v2.
+
+        Parameters
+        ----------
+        v1 : array
+            First vector.
+        v2 : array
+            Second vector.
+
+        Note
+        ----
+        Input vector arrays must have shape
         (rows, cols) = (N,3),
         where cols is x,y,z coordinates,
         and rows is number of vectors.
+
+        Returns
+        -------
+        dp : float
+            Dot product of v1 and v2.
         """
       
         # For array with multiple vectors:
@@ -142,21 +188,45 @@ class Process(ProcessSims.Process):
     
     def length(self, v):
         
-        """length of vector, v."""
+        """Calculates length of vector.
+        
+        Parameters
+        ----------
+        v : array
+            Input vector.
+
+        Returns
+        -------
+        float
+            Vector length. 
+        """
         
         return np.sqrt(self.dot_product(v,v))
     
     def angle(self, v1, v2):
-        
-        """
-        Angle between two vectors, in radians.
+       
+        """Calculates angle between two vectors, in radians.
 
-        Input vector arrays must have shape 
+        Parameters
+        ----------
+        v1 : array
+            First vector.
+        v2 : array
+            Second vector.
+
+        Note
+        ----
+        Input vector arrays must have shape
         (rows, cols) = (N,3),
         where cols is x,y,z coordinates,
-        and rows is number of vectors. 
+        and rows is number of vectors.
+
+        Returns
+        -------
+        angle : float
+            Angle in radians.
         """
-        
+         
         arg = self.dot_product(v1,v2)/(self.length(v1)*self.length(v2))
         
         # Need to round to limited decimal places, 
@@ -169,14 +239,22 @@ class Process(ProcessSims.Process):
 
     def line_point(self,o,u,d):
 
-        '''
-        Return a point on a line segment.
+        """Finds  point on a line segment.
 
-        Inputs:
-        o (array-like): Point on line. In our case it's the starting photon position.
-        u (array-like): Direction of line segment. In our case it's the starting photon direction.
-        d (array-like): Distance from specified point (o) in the specified direction (u).
-        '''
+        Parameters
+        ----------
+        o : array-like 
+            Point on line. In our case it's the starting photon position.
+        u : array-like
+            Direction of line segment. In our case it's the starting photon direction.
+        d: array-like 
+            Distance from specified point (o) in the specified direction (u).
+        
+        Returns
+        -------
+        x : array-like
+            Point on line. 
+        """
     
         # Standard equation of a line
         x = o + (d*u.T).T
@@ -185,27 +263,42 @@ class Process(ProcessSims.Process):
 
     def find_projection(self,o,u,r):
     
-        '''
-        Finds projection of line segment onto sphere.
+        """Finds projection of line segment onto sphere.
+        
         Everything should be done in Cartesian coordinates.
-        The closets point of intersection defines the normal vector to 
+        The closest point of intersection defines the normal vector to 
         the surface, relative to the initial direction.
         The true incident angle (before scattering) is the angle 
         between these two vectors.
 
-        Inputs:
-        o (array-like): Point on line. In our case it's the starting photon position.
-        u (array_like): Direction of line segment. In our case it's the starting photon direction.
-        r (float): Radius of watched sphere. Default is r_earth + 33.1 km. 
+        Parameters
+        ----------
+        o : array-like 
+            Point on line. In our case it's the starting photon position.
+        u : array_like
+            Direction of line segment. In our case it's the starting photon direction.
+        r : float
+            Radius of watched sphere. Default is r_earth + 33.1 km. 
 
-        All inputs must have self-consistent units. 
-        '''
+        Returns
+        -------
+        intersection : array
+            Point of intersection
+
+        Note
+        ----
+        All inputs must have self-consistent units.  
+        """
 
         # Solve for d.
         # This is the solution of a quadratic equation, so we want the 
         # shortest distance, which is the first intercept. 
         dp = self.dot_product(u,o)
         sqrt = np.sqrt( dp**2 - norm(u,axis=1)**2 * (norm(o,axis=1)**2 - r**2) )
+        print()
+        print("Finding intersection...")
+        print("Number of photons with no solution: " + str(len(sqrt[np.isnan(sqrt)])))
+        print()
         num_plus = -1* dp + sqrt
         num_min = -1* dp - sqrt
         denom = norm(u,axis=1)**2
@@ -218,17 +311,34 @@ class Process(ProcessSims.Process):
 
         return intersection
 
-    def bin_sim(self, elow=10, ehigh=10000, num_ebins=17, nside=16, scheme='ring'):
+    def bin_sim(self, elow=10, ehigh=10000, num_ebins=17, \
+            anglow=0, anghigh=100, num_angbins=26,  nside=16, scheme='ring'):
 
-        """
-        Construct main histogram.
+        """Bins the simulations, and writes output files 
+        for both starting and measured photons. 
+           
+        Events are weigthed by the ratio of the cosine of incident 
+        angle to cosine of measured angle. This is a geometric 
+        correction factor to account for the effect of the projected area.
 
-        Inputs:
-        elow: Lower energy bound in keV. Defualt is 100 keV. 
-        ehigh: Upper energy bound in keV. Default is 10000 keV (10 MeV).
-        num_ebins: Number of energy bins to use. Only log binning for now. 
-        nside: nside for healpix binning. Defualt is 16.
-        scheme: scheme for healpix binning (ring or nested). Default is ring.
+        Parameters
+        ----------
+        elow : float, optional
+            Lower energy bound in keV (defualt is 100 keV). 
+        ehigh : float, optional 
+            Upper energy bound in keV (default is 10000 keV.
+        num_ebins : int, optional 
+            Number of energy bins to use (default is 17). Only log binning for now. 
+        anglow : float, optional
+            Lower bound of angle in degrees (default is 0).
+        anghigh : float, optional
+            Upper bound of anlge in degrees (default is 100)
+        num_angbins : int, optional
+            Number of angular bins (default is 26).
+        nside : int, optional 
+            nside for healpix binning (defualt is 16).
+        scheme : str, optional 
+            Scheme for healpix binning (ring or nested). Default is ring.
         """
         
         # Define energy bin edges: 
@@ -242,7 +352,7 @@ class Process(ProcessSims.Process):
         
         # Define incident angle bin edges (for initial and measured):
         # Using 4 deg resolution for now.
-        self.incident_ang_bins = np.linspace(0,100,26)
+        self.incident_ang_bins = np.linspace(anglow,anghigh,num_angbins)
         print()
         print("Theta bins:")
         print(self.incident_ang_bins)
@@ -277,6 +387,7 @@ class Process(ProcessSims.Process):
         self.starting_photons.fill(self.ei, self.ri, self.ang_pixs_ri, self.ang_pixs_di)
 
         # Make histogram for starting photons response:
+        keep_index = np.isin(self.idi,self.idm)
         self.starting_photons_rsp = Histogram([self.energy_bin_edges, self.incident_ang_bins],\
                 labels=["Ei [keV]", "theta_i [deg]"], sparse=True)
         self.starting_photons_rsp.fill(self.ei, self.incident_angle_i)
@@ -319,9 +430,7 @@ class Process(ProcessSims.Process):
 
     def get_binning_info(self):
 
-        """
-        Get info from histogram.
-        """
+        """Get info from histogram."""
 
         # Energy info:
         self.energy_bin_centers = self.primary_rsp.axes["Ei [keV]"].centers
@@ -341,6 +450,7 @@ class Process(ProcessSims.Process):
         self.radial_bin_widths = self.starting_photons.axes["ri [km]"].widths
 
         # Incident angle bins:
+        self.incident_ang_centers = self.primary_rsp.axes["theta_i [deg]"].centers
         self.incident_ang_bins = self.primary_rsp.axes["theta_i [deg]"].edges
 
         # Projected histograms:
@@ -358,23 +468,34 @@ class Process(ProcessSims.Process):
     def make_scattering_plots(self, pos_init=True, pos_meas=True, pos_proj=True,\
             pos_ang_ri=True, pos_ang_di=True, ri=True,\
             pos_ang_rm=True, pos_ang_dm=True, rm=True,\
-            theta_dist=True):
+            theta_dist=True, ang_dist=True):
         
-        """
-        Visualize the simulated photons. All plots are made be default,
-        but they can also be set to False. 
+        """Visualize the simulated photons. 
 
-        Plots:
-        pos_init: 3d scatter plot of initial postions
-        pos_meas: 3d scatter plot of measured positions
-        pos_proj: 2d projection onto xy-axis of initial positions
-        pos_ang_ri: healpix map of initial positions
-        pos_ang_di: healpix map of initial directions
-        ri: initial radius (relative to both Earth center and surrounding sphere disk)
-        pos_ang_rm: healpix map of measured positions
-        pos_ang_dm: healpix map of measured directions
-        rm: measured radius with respect to Earth center 
-        theta_dist: distributions of incident angle (initial and measured) 
+        Parameters
+        ----------
+        pos_init : bool, optional 
+            3d scatter plot of initial postions
+        pos_meas : bool, optional 
+            3d scatter plot of measured positions
+        pos_proj : bool, optional 
+            2d projection onto xy-axis of initial positions
+        pos_ang_ri : bool, optional 
+            healpix map of initial positions
+        pos_ang_di : bool, optional 
+            healpix map of initial directions
+        ri : bool, optional
+            initial radius (relative to both Earth center and surrounding sphere disk)
+        pos_ang_rm : bool, optional 
+            healpix map of measured positions
+        pos_ang_dm : bool, optional 
+            healpix map of measured directions
+        rm : bool, optional 
+            measured radius with respect to Earth center 
+        theta_dist : bool, optional 
+            distributions of incident angle (initial and measured) 
+        ang_dist : bool, optional 
+            distribution of measured anlges for a given initial angle
         """
         
         # Initial photons 3d position: 
@@ -624,19 +745,47 @@ class Process(ProcessSims.Process):
             plt.savefig("theta_i_m_residual.pdf")
             plt.show()
             plt.close()
+    
+        if ang_dist == True:
+           
+            # This is still being tested. 
+            ang_bin = 12 # 0, 8 (34 deg), 12 (50 deg)
+            print(self.incident_ang_centers)
+            print(self.energy_bin_centers)
+            print("energy: " + str(self.energy_bin_centers[15])) # 7 (261 keV), 15 (8 MeV)  
+            dist = self.primary_rsp.slice[{"theta_i [deg]":ang_bin,"Ei [keV]":7}].project(["theta_m [deg]"]).contents.todense()
+            plt.semilogy(self.incident_ang_centers,dist,marker='o',ls="-",label="true")
+           
+            ang_i = self.incident_ang_centers[ang_bin] * (np.pi/180)
+            new = (np.cos(ang_i)/np.cos((np.pi/180.0)*self.incident_ang_centers))*dist
+            #new *= (np.sin(ang_i)/np.sin((np.pi/180.0)*self.incident_ang_centers))
+            plt.semilogy(self.incident_ang_centers,new,marker='o',ls="-.", color="red",label=r"scaled by cos($\theta_i$)/cos($\theta_m$)")
+
+            ang_i = self.incident_ang_centers[ang_bin] * (np.pi/180)
+            new = (np.cos(ang_i)/np.cos((np.pi/180.0)*self.incident_ang_centers))*dist
+            new *= (np.sin(ang_i)/np.sin((np.pi/180.0)*self.incident_ang_centers))
+            plt.semilogy(self.incident_ang_centers,new,marker='o',ls="--", color="cyan",label=r"scaled by cos($\theta_i$)sin($\theta_i$)/cos($\theta_m$)sin($\theta_m$)")
+            
+
+            plt.xlabel(r"$\theta$",fontsize=14)
+            plt.ylabel("Counts",fontsize=14)
+            plt.grid(ls="--",color="grey",alpha=0.4)
+            plt.legend(loc=1,frameon=True)
+            plt.show()
 
         return
    
-    def load_response(self,rsp_file):
+    def load_response(self):
 
+        """Load response file and corresponding normalization.
+
+        Note
+        ----
+        Currently there are 5 different histograms used for 
+        analyzing the sims. It might be better to combine these to a single file. 
         """
-        Load response file and corresponding normalization.
 
-        Note: Currently there are 5 different histograms used for 
-        analyzing the sims. I need to combine these to a single file. 
-        """
-
-        self.primary_rsp = Histogram.open(rsp_file)
+        self.primary_rsp = Histogram.open('primary_rsp.hdf5')
         self.starting_photons = Histogram.open('starting_photons.hdf5')
         self.starting_photons_rsp = Histogram.open('starting_photons_rsp.hdf5')
         self.measured_photons = Histogram.open('measured_photons.write.hdf5')
@@ -647,34 +796,37 @@ class Process(ProcessSims.Process):
 
     def get_total_edisp_matrix(self, theta_bin, show_sanity_checks=False, make_plots=True, rsp_file=None):
 
-        """
-        Get the energy dispersion matrix. The total energy dispersion
-        is the sum of the transmitted photons (which don't scatter) and the
-        scattered photons. Here I calculate all three: transmitted, scattered, 
-        and total. Likewise, I calculate the transmission probability for 
-        all three. 
-
-        Inputs:
+        """Get the energy dispersion matrix. 
         
-        theta_bin: index of incident angle. 
+        The total energy dispersion is the sum of the transmitted 
+        photons (which don't scatter) and the scattered photons. 
+        Here I calculate all three: transmitted, scattered, and total. 
+        Likewise, I calculate the transmission probability for all three. 
 
-        show_sanity_checks: Print a comparison of total energy dispersion
-        to summed energy dispersion (beam + scattered), and also for 
-        transmission probability, to verify that they are the same. 
-
-        make_plots: Show plots. 
-
-        rsp_file: Option to load resonse from hdf5 file.
-            - Give name of main response for now.  
+        Parameters
+        ----------
+        theta_bin : int
+            Index of incident angle. 
+        show_sanity_checks : bool, optional 
+            Print a comparison of total energy dispersion
+            to summed energy dispersion (beam + scattered), and also for 
+            transmission probability, to verify that they are the same. 
+            Default is False.
+        make_plots : bool, optional 
+            Show plots (default is True).
+        rsp_file : bool, optional 
+            Option to load resonse from hdf5 file.
         """
 
         # Option to load response from file:
         if rsp_file != None:
             self.load_response(rsp_file)
 
+        # Normalize response:
+        self.normalize_response()
+
         # Make transmitted edisp array:
-        self.edisp_array_beam, \
-        self.normed_edisp_array_beam,\
+        self.normed_edisp_array_beam, \
         self.tp_beam = self.make_edisp_matrix(theta_bin,comp="transmitted")
 
         # Save TP Beam to file:
@@ -683,13 +835,11 @@ class Process(ProcessSims.Process):
         df.to_csv("tp_beam.dat",sep="\t",index=False)
 
         # Make scattered edisp array:
-        self.edisp_array_scattered, \
-        self.normed_edisp_array_scattered,\
+        self.normed_edisp_array_scattered, \
         self.tp_scattered = self.make_edisp_matrix(theta_bin,comp="scattered")
 
         # Make total edisp array:
-        self.edisp_array_total, \
-        self.normed_edisp_array_total,\
+        self.normed_edisp_array_total, \
         self.tp_total = self.make_edisp_matrix(theta_bin,comp="total")
 
         # Calculate total as sum of beam and scattered (sanity check):
@@ -726,52 +876,74 @@ class Process(ProcessSims.Process):
 
         return
 
+    def normalize_response(self):
+
+        """Normalizes the atmospheric response matrix by the total 
+        photons thrown in E_i and theta_i. 
+        """
+     
+        # Normalization factor:
+        N = self.starting_photons_rsp.contents.todense()
+        N = np.array(N)
+        
+        # Set 0 bins to arbitrary large number to avoid division by 0:
+        N[N==0] = 1e12
+        
+        # Normalize:
+        self.primary_rsp = self.primary_rsp.todense() / N[:,None,:,None]
+         
+        return
+    
     def make_edisp_matrix(self, theta_bin, comp="total"):
 
+        """Make energy dispersion matrix.
+        
+        Parameters
+        ----------
+        theta_bin : int 
+            index of incident angle.
+        comp : str, optional
+            Component to use for constructing matrix. Either 
+            transmitted, scattered, or total (default is total). 
         """
-        Make energy dispersion matrix.
         
-        Inputs:
-        
-        theta_bin: index of incident angle.
+        # Geometeric correction factor:
+        make_geo_correction = True
+        geo_correction_cos = np.cos((np.pi/180.0)*self.incident_ang_centers)
+        geo_correction_sin = np.sin((np.pi/180.0)*self.incident_ang_centers)
 
-        comp: Component to use for constructing matrix.
-              - Either transmitted, scattered, or total. 
-              - Default is total. 
-        """
-           
         # Project onto em, ei:
         if comp == "transmitted":
-            self.edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, "theta_m [deg]":theta_bin}].project(["Em [keV]", "Ei [keV]"]).contents.todense()
-            self.edisp_array = np.array(self.edisp_array)
+            self.edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, 
+                "theta_m [deg]":theta_bin}].project(["Em [keV]", "Ei [keV]"]).contents
+            self.edisp_array = np.array(self.edisp_array) 
 
+        max_theta_bin = 21 #20 #25
+        print("max theta: " + str(self.incident_ang_centers[max_theta_bin]))
         if comp == "scattered":
             counter = 0
-            for i in range(0,25):
-                if i != theta_bin:
+            for i in range(0,max_theta_bin+1):
+                if (i != theta_bin):
                     if counter == 0:
-                        this_edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, "theta_m [deg]":i}].project(["Em [keV]", "Ei [keV]"]).contents.todense()
-                        self.edisp_array = np.array(this_edisp_array)
+                        this_edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, 
+                            "theta_m [deg]":i}].project(["Em [keV]", "Ei [keV]"]).contents
+                        if make_geo_correction == True:
+                            this_edisp_array *= (geo_correction_cos[theta_bin]/geo_correction_cos[i])
+                            this_edisp_array *= (geo_correction_sin[theta_bin]/geo_correction_sin[i])
+                        self.edisp_array = np.array(this_edisp_array) 
                         counter += 1
                     if counter != 0:
-                        this_edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, "theta_m [deg]":i}].project(["Em [keV]", "Ei [keV]"]).contents.todense()
-                        self.edisp_array += np.array(this_edisp_array)
+                        this_edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, 
+                            "theta_m [deg]":i}].project(["Em [keV]", "Ei [keV]"]).contents
+                        if make_geo_correction == True:
+                            this_edisp_array *= (geo_correction_cos[theta_bin]/geo_correction_cos[i])
+                            this_edisp_array *= (geo_correction_sin[theta_bin]/geo_correction_sin[i])
+                        self.edisp_array += np.array(this_edisp_array) 
 
         if comp == "total":
-            self.edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin}].project(["Em [keV]", "Ei [keV]"]).contents.todense()
-            self.edisp_array = np.array(self.edisp_array)
-
-        # Normalized edisp array:
-        norm  = self.starting_photons_rsp.slice[{'theta_i [deg]':theta_bin}].project(["Ei [keV]"]).contents.todense()
-        norm[norm==0] = 1.0
-        self.normed_edisp_array = self.edisp_array / norm
-        if comp == "total":
-            print()
-            print("Normalization:")
-            print(norm)
-            print()
-
-        # Transmission probability:
-        self.tp = self.normed_edisp_array.sum(axis=0)
+            self.edisp_array = self.normed_edisp_array_beam + self.normed_edisp_array_scattered
         
-        return self.edisp_array, self.normed_edisp_array, self.tp
+        # Transmission probability:
+        self.tp = self.edisp_array.sum(axis=0)
+        
+        return self.edisp_array, self.tp

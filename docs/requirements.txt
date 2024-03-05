@@ -1,0 +1,8 @@
+pandas
+numpy
+matplotlib
+histpy
+scipy==1.0
+astropy
+healpy
+pymsis

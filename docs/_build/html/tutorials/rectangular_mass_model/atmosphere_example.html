@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulating gamma-ray transport in the atmosphere with the cosi-atmosphere package &mdash; cosi-atmosphere  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="API" href="../../api/index.html" />
+    <link rel="prev" title="Tutorials" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            cosi-atmosphere
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Rectangular mass model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Make-the-Mass-Model">Make the Mass Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Make-the-Source-File">Make the Source File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Run-the-Simulations">Run the Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Process-the-Simulations">Process the Simulations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Get-Atmospheric-Response">Get Atmospheric Response</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">cosi-atmosphere</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Simulating gamma-ray transport in the atmosphere with the cosi-atmosphere package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/tutorials/rectangular_mass_model/atmosphere_example.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Simulating-gamma-ray-transport-in-the-atmosphere-with-the-cosi-atmosphere-package">
+<h1>Simulating gamma-ray transport in the atmosphere with the cosi-atmosphere package<a class="headerlink" href="#Simulating-gamma-ray-transport-in-the-atmosphere-with-the-cosi-atmosphere-package" title="Link to this heading"></a></h1>
+<p>Import the COSI atmosphere package</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cosi_atmosphere.response.AtmosphericProfile</span> <span class="kn">import</span> <span class="n">Atmosphere</span>
+<span class="kn">from</span> <span class="nn">cosi_atmosphere.response.MassModels</span> <span class="kn">import</span> <span class="n">MakeMassModels</span>
+<span class="kn">from</span> <span class="nn">cosi_atmosphere.response.RunSims</span> <span class="kn">import</span> <span class="n">Simulate</span>
+<span class="kn">from</span> <span class="nn">cosi_atmosphere.response.ProcessSims</span> <span class="kn">import</span> <span class="n">Process</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+</pre></div>
+</div>
+</div>
+<section id="Make-the-Mass-Model">
+<h2>Make the Mass Model<a class="headerlink" href="#Make-the-Mass-Model" title="Link to this heading"></a></h2>
+<p>The first step is to make an atmospheric model using the Atmosphere class. This provides an altitude density profile for the different species of the atmosphere. For the atmospheric model you need to specify the date, latitude and longitude, as well as the atmospheric spacing. Here we will use a spacing of 100 m.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span> <span class="o">=</span> <span class="n">Atmosphere</span><span class="p">()</span>
+<span class="n">date</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;2016-06-13 12:00:00&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;datetime64[h]&quot;</span><span class="p">)</span>
+<span class="n">lat</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.66</span>
+<span class="n">lon</span> <span class="o">=</span> <span class="o">-</span><span class="mf">107.38</span>
+<span class="n">alts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">2001</span><span class="p">)</span> <span class="c1"># km; spacing is 0.1 km (100 m)</span>
+<span class="n">atm_model</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_atm_profile</span><span class="p">(</span><span class="s2">&quot;rep_atm_model.dat&quot;</span><span class="p">,</span><span class="n">date</span><span class="p">,</span><span class="n">lon</span><span class="p">,</span><span class="n">lat</span><span class="p">,</span><span class="n">alts</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Let’s take a look at the first 5 lines of the output file to see what it contains:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;head -n 5 rep_atm_model.dat&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Next we need to make a mass model of the atmosphere. This is done with the MakeMassModels class, which takes as input the atmospheric model calculated in the previous step. Let’s first define an instance of the class and plot the atmospheric profile:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span> <span class="o">=</span> <span class="n">MakeMassModels</span><span class="p">(</span><span class="s2">&quot;rep_atm_model.dat&quot;</span><span class="p">)</span>
+<span class="n">instance</span><span class="o">.</span><span class="n">plot_atmosphere</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>The left axis in the above plot shows the number density of the different atmospheric elements. The right axis shows the total mass density of all elements. Now let’s define our mass model. Two options are available for this: rectangular and spherical. The simulations use a watched volume to detect all passing photons, and so we need to pass the altitude to use. Here we will use a rectangular geometry with a watched volume at 33 km.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span><span class="o">.</span><span class="n">rectangular_model</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The output is written to atmosphere.geo. Let’s take a look at the first 40 lines:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;head -n 40 atmosphere.geo&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>You can see that each volume slice is a large rectangular slab with a half-width of 5000 cm. The material of each volume slice corresponds to the atmospheric profile. Now let’s take a look at the last 20 lines of the geometry file:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;tail -n 20 atmosphere.geo&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The last block here is our watched volume (called TestVolume). Here we are watching VolumeSlice_330_331, which corresponds to the rectangular slab at an altitude of 33 km. In principle, we can let the watched volume be whatever we want. For example, to use a sphere with a radius of 100 cm within the same volume slice, you would replace the shape with: TestVolume.Shape Sphere 0 100. This option is not yet hard coded, so if a different watched volume is needed, you will have to do it by hand for
+now.</p>
+</section>
+<section id="Make-the-Source-File">
+<h2>Make the Source File<a class="headerlink" href="#Make-the-Source-File" title="Link to this heading"></a></h2>
+<p>The other thing we need for the simulations is the source file. For the rectangular geometry we use a narrow beam, and an example file is provided: AtmospherePencilBeam.source. Let’s take a look:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;cat AtmospherePencilBeam.source&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>For demonstration purposes we are only simulating 100,000 triggers. In practice, ~ 1 million - 5 million should provide sufficient statistics. Note: Even 100,000 triggers takes a long time. For an even faster test, try simulating just 1000 triggers. We have a homogeneous narrow beam (r = 1cm) placed on axis at the top of the atmosphere (200 km), which throws photons straight down. The spectrum is linear between 10 - 10000 keV.</p>
+<p>The inputs for HomogeneousBeam are: x y z nx ny nz r. We can place the beam off-axis by changing x, nx, and nz. For example, suppose we want to do 50 degrees off axis with a watched altitude of 33 km. We can determine what values we need to use by running the following:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">angle</span> <span class="o">=</span> <span class="mf">50.0</span> <span class="c1"># degrees</span>
+<span class="n">altitude</span> <span class="o">=</span> <span class="mf">33.0</span> <span class="c1"># km</span>
+<span class="n">instance</span><span class="o">.</span><span class="n">get_cart_vectors</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">altitude</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Replacing the corresponding inputs in the source file with these values will produce an off-axis source.</p>
+</section>
+<section id="Run-the-Simulations">
+<h2>Run the Simulations<a class="headerlink" href="#Run-the-Simulations" title="Link to this heading"></a></h2>
+<p>Once we have the mass model and the source file, we can run the simulations. Let’s define an instance of the Simulation class and make a short run:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span> <span class="o">=</span> <span class="n">Simulate</span><span class="p">()</span>
+<span class="n">instance</span><span class="o">.</span><span class="n">run_sim</span><span class="p">(</span><span class="s2">&quot;AtmospherePencilBeam.source&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">3000</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The above command is a python wrapper for cosima, and it will produce the .sim file. Now let’s parse the sim file. This will produce two .dat files: one with information for all thrown photons and another with information for all detected photons.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span><span class="o">.</span><span class="n">parse_sim_file</span><span class="p">(</span><span class="s2">&quot;Atmosphere_PencilBeam.inc1.id1.sim&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Let’s take a look at the output format:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;head -n 5 all_thrown_events.dat&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;head -n 5 event_list.dat&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Note that the first file has all the initial information, and the second file has all the measured information.</p>
+</section>
+<section id="Process-the-Simulations">
+<h2>Process the Simulations<a class="headerlink" href="#Process-the-Simulations" title="Link to this heading"></a></h2>
+<p>Now we can process the simulations using the Process class. When defining an instance of the Process class we need to specify off-axis angle of the source. As a simple example, let’s bin the data and make some diagnostic plots:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">instance</span><span class="o">.</span><span class="n">bin_sim</span><span class="p">()</span>
+<span class="n">instance</span><span class="o">.</span><span class="n">make_scattering_plots</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>The statistics are not great since we only ran 100,000 triggers, but this gives an idea of the output. summary of output plots: plot 1: x y positions of starting photons plot 2: x y positions of measured photons: blue = scatterd, black = un-scattered plot 3: spectrum of initial and measured photons plot 4: distribution of counts versus the radius from the center of the beam (rm) plot 5: distribution of counts versus the photon’s incident angle (theta_prime) plot 6: projection of counts onto
+incident angle and measured energy (Em) axes plot 7: projection of counts onto rm and Em axes plot 8: projection of counts onto rm and initial energy (Ei) axes</p>
+</section>
+<section id="Get-Atmospheric-Response">
+<h2>Get Atmospheric Response<a class="headerlink" href="#Get-Atmospheric-Response" title="Link to this heading"></a></h2>
+<p>Now let’s get the atmospheric response. The first three outputs will show the energy dispersion matrices for the transmitted component, the scattered component, and the total (which is the sum of the transmitted and scattered components). The last output will show the transmissoin probability for all three components, which is the projection of the energy dispersion matrices onto the initial energy axis. See Karwin+23 for more details.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span><span class="o">.</span><span class="n">get_total_edisp_matrix</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>Finally, let’s get the correction factor and correction factor ratio (also defined in Karwin+23). We’ll use a power law spectral model with index 2.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_flux</span><span class="o">=</span><span class="n">instance</span><span class="o">.</span><span class="n">PL_interp</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">instance</span><span class="o">.</span><span class="n">ff_correction</span><span class="p">(</span><span class="n">model_flux</span><span class="p">,</span><span class="s2">&quot;new_sims&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../api/index.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Chris Karwin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

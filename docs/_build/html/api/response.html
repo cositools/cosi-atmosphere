@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Response &mdash; cosi-atmosphere  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="API" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            cosi-atmosphere
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Response</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cosi_atmosphere.response.MakeMassModels"><code class="docutils literal notranslate"><span class="pre">MakeMassModels</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.MakeMassModels.get_cart_vectors"><code class="docutils literal notranslate"><span class="pre">MakeMassModels.get_cart_vectors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.MakeMassModels.plot_atmosphere"><code class="docutils literal notranslate"><span class="pre">MakeMassModels.plot_atmosphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.MakeMassModels.rectangular_model"><code class="docutils literal notranslate"><span class="pre">MakeMassModels.rectangular_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.MakeMassModels.spherical_model"><code class="docutils literal notranslate"><span class="pre">MakeMassModels.spherical_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cosi_atmosphere.response.Simulate"><code class="docutils literal notranslate"><span class="pre">Simulate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Simulate.run_sim"><code class="docutils literal notranslate"><span class="pre">Simulate.run_sim()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Simulate.parse_sim_file"><code class="docutils literal notranslate"><span class="pre">Simulate.parse_sim_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cosi_atmosphere.response.Process"><code class="docutils literal notranslate"><span class="pre">Process</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.dot_product"><code class="docutils literal notranslate"><span class="pre">Process.dot_product()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.length"><code class="docutils literal notranslate"><span class="pre">Process.length()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.angle"><code class="docutils literal notranslate"><span class="pre">Process.angle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.bin_sim"><code class="docutils literal notranslate"><span class="pre">Process.bin_sim()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.get_binning_info"><code class="docutils literal notranslate"><span class="pre">Process.get_binning_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.load_response"><code class="docutils literal notranslate"><span class="pre">Process.load_response()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.make_scattering_plots"><code class="docutils literal notranslate"><span class="pre">Process.make_scattering_plots()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.calc_tp"><code class="docutils literal notranslate"><span class="pre">Process.calc_tp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.plot_tp"><code class="docutils literal notranslate"><span class="pre">Process.plot_tp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.get_tp_from_file"><code class="docutils literal notranslate"><span class="pre">Process.get_tp_from_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.get_total_edisp_matrix"><code class="docutils literal notranslate"><span class="pre">Process.get_total_edisp_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.make_edisp_matrix"><code class="docutils literal notranslate"><span class="pre">Process.make_edisp_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.plot_edisp_matrix"><code class="docutils literal notranslate"><span class="pre">Process.plot_edisp_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.plot_tp_from_edisp"><code class="docutils literal notranslate"><span class="pre">Process.plot_tp_from_edisp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.PL"><code class="docutils literal notranslate"><span class="pre">Process.PL()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.PL_interp"><code class="docutils literal notranslate"><span class="pre">Process.PL_interp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Process.ff_correction"><code class="docutils literal notranslate"><span class="pre">Process.ff_correction()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.dot_product"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.dot_product()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.length"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.length()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.angle"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.angle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.line_point"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.line_point()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.find_projection"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.find_projection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.bin_sim"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.bin_sim()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.get_binning_info"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.get_binning_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.make_scattering_plots"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.make_scattering_plots()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.load_response"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.load_response()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.get_total_edisp_matrix"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.get_total_edisp_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.normalize_response"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.normalize_response()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.ProcessSpherical.make_edisp_matrix"><code class="docutils literal notranslate"><span class="pre">ProcessSpherical.make_edisp_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cosi_atmosphere.response.Atmosphere"><code class="docutils literal notranslate"><span class="pre">Atmosphere</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cosi_atmosphere.response.Atmosphere.get_atm_profile"><code class="docutils literal notranslate"><span class="pre">Atmosphere.get_atm_profile()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cosi-atmosphere</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API</a></li>
+      <li class="breadcrumb-item active">Response</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/response.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="response">
+<h1>Response<a class="headerlink" href="#response" title="Link to this heading"></a></h1>
+<dl class="py class" id="module-cosi_atmosphere.response">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.MakeMassModels">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosi_atmosphere.response.</span></span><span class="sig-name descname"><span class="pre">MakeMassModels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atmosphere_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/MassModels.html#MakeMassModels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.MakeMassModels" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.MakeMassModels.get_cart_vectors">
+<span class="sig-name descname"><span class="pre">get_cart_vectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">altitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam_alt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/MassModels.html#MakeMassModels.get_cart_vectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.MakeMassModels.get_cart_vectors" title="Link to this definition"></a></dt>
+<dd><p>Get x position and direction vectors for off-axis beam.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>angle</strong> (<em>float</em>) – Incident angle of source in degrees.</p></li>
+<li><p><strong>altitude</strong> (<em>float</em>) – Altitude of detecting plane in km.</p></li>
+<li><p><strong>beam_alt</strong> (<em>float</em><em>, </em><em>optional</em>) – Altitude at which the beam is placed in km (default is 200 km).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.MakeMassModels.plot_atmosphere">
+<span class="sig-name descname"><span class="pre">plot_atmosphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_comparison</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/MassModels.html#MakeMassModels.plot_atmosphere"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.MakeMassModels.plot_atmosphere" title="Link to this definition"></a></dt>
+<dd><p>Plot atmosphere model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>show_comparison</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, compare normalized atmospheric components to original
+calculation from AZ (default is False).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.MakeMassModels.rectangular_model">
+<span class="sig-name descname"><span class="pre">rectangular_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">watch_height</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/MassModels.html#MakeMassModels.rectangular_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.MakeMassModels.rectangular_model" title="Link to this definition"></a></dt>
+<dd><p>Original rectangular mass model by AZ,
+from MEGAlib/resource/examples/advanced/Atmosphere.</p>
+<p>This is also similar to what was done by Alex Lowell.
+The model consists of rectangular atmoshperic slabs.
+There is a very tiny surrounding sphere placed at the
+top of the atmoshpere, although this is not used for a
+unifrom beam source. The watched volume is the entire
+slab starting at the specified watch_height. The source
+is a narrow beam with radius = 1cm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>watch_height</strong> (<em>float</em>) – Altitude for watched volume in km.
+The actual volume will be a box starting at the
+specified value, with a height equal to the spacing
+specified in the atmospheric model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.MakeMassModels.spherical_model">
+<span class="sig-name descname"><span class="pre">spherical_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">watch_alt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/MassModels.html#MakeMassModels.spherical_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.MakeMassModels.spherical_model" title="Link to this definition"></a></dt>
+<dd><p>Model consists of concentric spherical shells,
+enclosed by a large surrounding sphere.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>watch_alt</strong> (<em>float</em>) – Altitude for watched volume in km.
+The actual volume will be a shell with the inner radius
+starting at the specified value, and a height equal to the spacing
+specified in the atmospheric model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Simulate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosi_atmosphere.response.</span></span><span class="sig-name descname"><span class="pre">Simulate</span></span><a class="reference internal" href="../_modules/cosi_atmosphere/response/RunSims.html#Simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Simulate" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Simulate.run_sim">
+<span class="sig-name descname"><span class="pre">run_sim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/RunSims.html#Simulate.run_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Simulate.run_sim" title="Link to this definition"></a></dt>
+<dd><p>Run atmospheric sims.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_file</strong> (<em>str</em>) – Cosima source file.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Option to pass seed to cosima (default is no seed).</p></li>
+<li><p><strong>verbosity</strong> (<em>int</em><em>, </em><em>optional</em>) – Output level of cosima (default is 1).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Simulate.parse_sim_file">
+<span class="sig-name descname"><span class="pre">parse_sim_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/RunSims.html#Simulate.parse_sim_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Simulate.parse_sim_file" title="Link to this definition"></a></dt>
+<dd><p>Parse sim file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sim_file</strong> (<em>str</em>) – Cosima sim file.</p></li>
+<li><p><strong>unique</strong> (<em>bool</em>) – A photon may cross the detecting volume numerous times.
+To only count the first pass, set unique=True (defualt).
+If false, will count all passes.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosi_atmosphere.response.</span></span><span class="sig-name descname"><span class="pre">Process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_events_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all_thrown_events.dat'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_events_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'event_list.dat'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.dot_product">
+<span class="sig-name descname"><span class="pre">dot_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.dot_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.dot_product" title="Link to this definition"></a></dt>
+<dd><p>Calculates dot product of two vectors, v1 and v2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v1</strong> (<em>array</em>) – First vector.</p></li>
+<li><p><strong>v2</strong> (<em>array</em>) – Second vector.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Input vector arrays must have shape
+(rows, cols) = (N,3),
+where cols is x,y,z coordinates,
+and rows is number of vectors.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dp</strong> – Dot product of v1 and v2.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.length">
+<span class="sig-name descname"><span class="pre">length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.length"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.length" title="Link to this definition"></a></dt>
+<dd><p>Calculates length of vector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>v</strong> (<em>array</em>) – Input vector.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Vector length.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.angle">
+<span class="sig-name descname"><span class="pre">angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.angle" title="Link to this definition"></a></dt>
+<dd><p>Calculates angle between two vectors, in radians.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v1</strong> (<em>array</em>) – First vector.</p></li>
+<li><p><strong>v2</strong> (<em>array</em>) – Second vector.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Input vector arrays must have shape
+(rows, cols) = (N,3),
+where cols is x,y,z coordinates,
+and rows is number of vectors.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>angle</strong> – Angle in radians.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.bin_sim">
+<span class="sig-name descname"><span class="pre">bin_sim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ehigh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_ebins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rlow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-07</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhigh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_rbins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_ph_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'starting_photons.hdf5'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_ph_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'measured_photons.hdf5'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.bin_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.bin_sim" title="Link to this definition"></a></dt>
+<dd><p>Bins the simulations, and writes output files
+for both starting and measured photons.</p>
+<p>Events are weigthed by the ratio of the cosine of incident
+angle to cosine of measured angle. This is a geometric
+correction factor to account for the effect of the projected area.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elow</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower energy bound in keV (defualt is 10 keV).</p></li>
+<li><p><strong>ehigh</strong> (<em>float</em><em>, </em><em>optional</em>) – Upper energy bound in keV (default is 10000 keV).</p></li>
+<li><p><strong>num_ebins</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of energy bins to use (default is 24). Only log
+binning for now.</p></li>
+<li><p><strong>rlow</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower radial bound in km (default is 1e-7).</p></li>
+<li><p><strong>rhigh</strong> (<em>float</em><em>, </em><em>optional</em>) – Upper radial bound in km (default is 1000).</p></li>
+<li><p><strong>num_rbins</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of radial bins to use (default is 120).</p></li>
+<li><p><strong>starting_ph_output</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of output file for starting photons binned histogram
+(default is ‘starting_photons.hdf5’).</p></li>
+<li><p><strong>measured_ph_output</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of output file for measured photons binned histogram
+(default is ‘measured_photons.hdf5’).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.get_binning_info">
+<span class="sig-name descname"><span class="pre">get_binning_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.get_binning_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.get_binning_info" title="Link to this definition"></a></dt>
+<dd><p>Get info from histogram.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.load_response">
+<span class="sig-name descname"><span class="pre">load_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">starting_ph_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'starting_photons.hdf5'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_ph_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'measured_photons.hdf5'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.load_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.load_response" title="Link to this definition"></a></dt>
+<dd><p>Load response files for starting and measured photons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>starting_ph_file</strong> (<em>str</em><em>, </em><em>optional</em>) – Binned histogram for staring photons (default is ‘starting_photons.hdf5’).</p></li>
+<li><p><strong>measured_ph_file</strong> (<em>str</em><em>, </em><em>optional</em>) – Binned histogram for measured photons (default is ‘measured_photons.hdf5’).</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Default photon files are the output from the bin_sim method.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.make_scattering_plots">
+<span class="sig-name descname"><span class="pre">make_scattering_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">starting_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec_i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radial_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_prime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_prime_em</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad_em</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad_ei</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_baseline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.make_scattering_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.make_scattering_plots" title="Link to this definition"></a></dt>
+<dd><p>Visualize the photon scattering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>starting_pos</strong> (<em>bool</em><em>, </em><em>optional</em>) – Scatter plot showing starting postions of all photons.</p></li>
+<li><p><strong>measured_pos</strong> (<em>bool</em><em>, </em><em>optional</em>) – Scatter plot showing measured postions of all photons.</p></li>
+<li><p><strong>spec_i</strong> (<em>bool</em><em>, </em><em>optional</em>) – Starting and measured photon spectrum.</p></li>
+<li><p><strong>radial_dist</strong> (<em>bool</em><em>, </em><em>optional</em>) – Radial distribution of measured photons.</p></li>
+<li><p><strong>theta_prime</strong> (<em>bool</em><em>, </em><em>optional</em>) – Incident angle distribution.</p></li>
+<li><p><strong>theta_prime_em</strong> (<em>bool</em><em>, </em><em>optional</em>) – Incident angle versus measured energy.</p></li>
+<li><p><strong>rad_em</strong> (<em>bool</em><em>, </em><em>optional</em>) – Radial distribution versus measured energy.</p></li>
+<li><p><strong>rad_ei</strong> (<em>bool</em><em>, </em><em>optional</em>) – Radial distribution versus initial energy.</p></li>
+<li><p><strong>show_baseline</strong> (<em>bool</em><em>, </em><em>optional</em>) – Option to show angular comparison to un-weighted histogram.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.calc_tp">
+<span class="sig-name descname"><span class="pre">calc_tp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.calc_tp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.calc_tp" title="Link to this definition"></a></dt>
+<dd><p>Calculate the transmission probability.</p>
+<p>This gives the probability that a photon of a given energy
+will pass the atmosphere without being scattered, and thus cross
+the detecting volume. The transmitted photons do not
+scatter, and thus there is no corresponding energy
+dispersion. However, the transmission probability does not
+account for scattered photons which enter the detecting volume
+from off-axis angles. These photons will produce a significant
+energy dispersion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>show_plot</strong> (<em>bool</em><em>, </em><em>optional</em>) – Option to plot transmission probability and compare to
+original calculation.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The transmission probability is a function of energy
+and off-axis angle of the source.</p>
+<p>The transmission probability can also be calculated using
+the get_total_edisp_matrix method, which is preferred.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.plot_tp">
+<span class="sig-name descname"><span class="pre">plot_tp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.plot_tp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.plot_tp" title="Link to this definition"></a></dt>
+<dd><p>Plot the transmission probability.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.get_tp_from_file">
+<span class="sig-name descname"><span class="pre">get_tp_from_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.get_tp_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.get_tp_from_file" title="Link to this definition"></a></dt>
+<dd><p>Read original transmission probability from numpy array (for 33 km).
+This has been used for past COSI studies, including DC1, and it’s
+included here for a sanity check.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tp_energy, tp_array</strong> – list of energies and array of TP values, respectively.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list, array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.get_total_edisp_matrix">
+<span class="sig-name descname"><span class="pre">get_total_edisp_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_sanity_checks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.get_total_edisp_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.get_total_edisp_matrix" title="Link to this definition"></a></dt>
+<dd><p>Get the energy dispersion matrix.</p>
+<p>The total energy dispersion is the sum of the beam photons
+(which don’t scatter) and the scattered photons. Here I calculate
+all three: beam, scattered, and total. Likewise, I calculate the
+transmission fraction for all three.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>show_sanity_checks</strong> (<em>bool</em><em>, </em><em>optional</em>) – Print a comparison of total energy dispersion to summed
+energy dispersion (beam + scattered), and also for transmission
+probability, to verify that they are the same (default is False).</p></li>
+<li><p><strong>make_plots</strong> (<em>bool</em><em>, </em><em>optional</em>) – Show plots (default is True).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.make_edisp_matrix">
+<span class="sig-name descname"><span class="pre">make_edisp_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idm_watch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">em_watch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_hist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.make_edisp_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.make_edisp_matrix" title="Link to this definition"></a></dt>
+<dd><p>Make energy dispersion matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idm_watch</strong> (<em>ArrayLike</em>) – IDs of measured photons for watched region.</p></li>
+<li><p><strong>em_watch</strong> (<em>ArrayLike</em>) – Energy histogram of photons for watched region.</p></li>
+<li><p><strong>write_hist</strong> (<em>bool</em>) – Option to save histogram to hdf5.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.plot_edisp_matrix">
+<span class="sig-name descname"><span class="pre">plot_edisp_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">savefile</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.plot_edisp_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.plot_edisp_matrix" title="Link to this definition"></a></dt>
+<dd><p>Plot energy dispersion matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.plot_tp_from_edisp">
+<span class="sig-name descname"><span class="pre">plot_tp_from_edisp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.plot_tp_from_edisp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.plot_tp_from_edisp" title="Link to this definition"></a></dt>
+<dd><p>Plot the transmission probability.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.PL">
+<span class="sig-name descname"><span class="pre">PL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.PL"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.PL" title="Link to this definition"></a></dt>
+<dd><p>General PL spectral model, normalized to 1e-3 at 100 keV.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>E</strong> (<em>float</em>) – Energy in keV.</p></li>
+<li><p><strong>p</strong> (<em>float</em>) – Power of dN/dE.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>dn/de</strong> – Value at given energy.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.PL_interp">
+<span class="sig-name descname"><span class="pre">PL_interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.PL_interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.PL_interp" title="Link to this definition"></a></dt>
+<dd><p>Returns interpolated PL function for energies between
+100 keV to 10 MeV.</p>
+<section id="paramters">
+<h2>Paramters<a class="headerlink" href="#paramters" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>p<span class="classifier">float</span></dt><dd><p>Power of dN/dE</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pl_interp</strong> – Interpolated function.</p>
+</dd>
+<dt class="field-even">rtype<span class="colon">:</span></dt>
+<dd class="field-even"><p>scipy:interpolate:interp1d</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Process.ff_correction">
+<span class="sig-name descname"><span class="pre">ff_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_flux</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSims.html#Process.ff_correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Process.ff_correction" title="Link to this definition"></a></dt>
+<dd><p>Calculate atmospheric correction factor by forward folding the
+atmospheric energy dispersion with the model counts.</p>
+<p>The energy dispersion matrices must first be generated via
+the ‘get_total_edisp_matrix’ method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_flux</strong> (<em>scipy:interpolate:interp1d</em>) – Interp1d object giving the model flux as a function of energy.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name of saved files.</p></li>
+<li><p><strong>show_plots</strong> (<em>bool</em>) – Option to plot correction factor and ratio.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosi_atmosphere.response.</span></span><span class="sig-name descname"><span class="pre">ProcessSpherical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_alt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_events_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all_thrown_events.dat'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_events_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'event_list.dat'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.dot_product">
+<span class="sig-name descname"><span class="pre">dot_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.dot_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.dot_product" title="Link to this definition"></a></dt>
+<dd><p>Calculates dot product of two vectors, v1 and v2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v1</strong> (<em>array</em>) – First vector.</p></li>
+<li><p><strong>v2</strong> (<em>array</em>) – Second vector.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Input vector arrays must have shape
+(rows, cols) = (N,3),
+where cols is x,y,z coordinates,
+and rows is number of vectors.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dp</strong> – Dot product of v1 and v2.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.length">
+<span class="sig-name descname"><span class="pre">length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.length"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.length" title="Link to this definition"></a></dt>
+<dd><p>Calculates length of vector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>v</strong> (<em>array</em>) – Input vector.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Vector length.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.angle">
+<span class="sig-name descname"><span class="pre">angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.angle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.angle" title="Link to this definition"></a></dt>
+<dd><p>Calculates angle between two vectors, in radians.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v1</strong> (<em>array</em>) – First vector.</p></li>
+<li><p><strong>v2</strong> (<em>array</em>) – Second vector.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Input vector arrays must have shape
+(rows, cols) = (N,3),
+where cols is x,y,z coordinates,
+and rows is number of vectors.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>angle</strong> – Angle in radians.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.line_point">
+<span class="sig-name descname"><span class="pre">line_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.line_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.line_point" title="Link to this definition"></a></dt>
+<dd><p>Finds  point on a line segment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>o</strong> (<em>array-like</em>) – Point on line. In our case it’s the starting photon position.</p></li>
+<li><p><strong>u</strong> (<em>array-like</em>) – Direction of line segment. In our case it’s the starting photon direction.</p></li>
+<li><p><strong>d</strong> (<em>array-like</em>) – Distance from specified point (o) in the specified direction (u).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>x</strong> – Point on line.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.find_projection">
+<span class="sig-name descname"><span class="pre">find_projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.find_projection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.find_projection" title="Link to this definition"></a></dt>
+<dd><p>Finds projection of line segment onto sphere.</p>
+<p>Everything should be done in Cartesian coordinates.
+The closest point of intersection defines the normal vector to
+the surface, relative to the initial direction.
+The true incident angle (before scattering) is the angle
+between these two vectors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>o</strong> (<em>array-like</em>) – Point on line. In our case it’s the starting photon position.</p></li>
+<li><p><strong>u</strong> (<em>array_like</em>) – Direction of line segment. In our case it’s the starting photon direction.</p></li>
+<li><p><strong>r</strong> (<em>float</em>) – Radius of watched sphere. Default is r_earth + 33.1 km.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>intersection</strong> – Point of intersection</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All inputs must have self-consistent units.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.bin_sim">
+<span class="sig-name descname"><span class="pre">bin_sim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ehigh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_ebins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">17</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anglow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anghigh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_angbins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">26</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nside</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ring'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.bin_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.bin_sim" title="Link to this definition"></a></dt>
+<dd><p>Bins the simulations, and writes output files
+for both starting and measured photons.</p>
+<p>Events are weigthed by the ratio of the cosine of incident
+angle to cosine of measured angle. This is a geometric
+correction factor to account for the effect of the projected area.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elow</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower energy bound in keV (defualt is 100 keV).</p></li>
+<li><p><strong>ehigh</strong> (<em>float</em><em>, </em><em>optional</em>) – Upper energy bound in keV (default is 10000 keV.</p></li>
+<li><p><strong>num_ebins</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of energy bins to use (default is 17). Only log binning for now.</p></li>
+<li><p><strong>anglow</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower bound of angle in degrees (default is 0).</p></li>
+<li><p><strong>anghigh</strong> (<em>float</em><em>, </em><em>optional</em>) – Upper bound of anlge in degrees (default is 100)</p></li>
+<li><p><strong>num_angbins</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of angular bins (default is 26).</p></li>
+<li><p><strong>nside</strong> (<em>int</em><em>, </em><em>optional</em>) – nside for healpix binning (defualt is 16).</p></li>
+<li><p><strong>scheme</strong> (<em>str</em><em>, </em><em>optional</em>) – Scheme for healpix binning (ring or nested). Default is ring.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.get_binning_info">
+<span class="sig-name descname"><span class="pre">get_binning_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.get_binning_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.get_binning_info" title="Link to this definition"></a></dt>
+<dd><p>Get info from histogram.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.make_scattering_plots">
+<span class="sig-name descname"><span class="pre">make_scattering_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_meas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_proj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_ang_ri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_ang_di</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_ang_rm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_ang_dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.make_scattering_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.make_scattering_plots" title="Link to this definition"></a></dt>
+<dd><p>Visualize the simulated photons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_init</strong> (<em>bool</em><em>, </em><em>optional</em>) – 3d scatter plot of initial postions</p></li>
+<li><p><strong>pos_meas</strong> (<em>bool</em><em>, </em><em>optional</em>) – 3d scatter plot of measured positions</p></li>
+<li><p><strong>pos_proj</strong> (<em>bool</em><em>, </em><em>optional</em>) – 2d projection onto xy-axis of initial positions</p></li>
+<li><p><strong>pos_ang_ri</strong> (<em>bool</em><em>, </em><em>optional</em>) – healpix map of initial positions</p></li>
+<li><p><strong>pos_ang_di</strong> (<em>bool</em><em>, </em><em>optional</em>) – healpix map of initial directions</p></li>
+<li><p><strong>ri</strong> (<em>bool</em><em>, </em><em>optional</em>) – initial radius (relative to both Earth center and surrounding sphere disk)</p></li>
+<li><p><strong>pos_ang_rm</strong> (<em>bool</em><em>, </em><em>optional</em>) – healpix map of measured positions</p></li>
+<li><p><strong>pos_ang_dm</strong> (<em>bool</em><em>, </em><em>optional</em>) – healpix map of measured directions</p></li>
+<li><p><strong>rm</strong> (<em>bool</em><em>, </em><em>optional</em>) – measured radius with respect to Earth center</p></li>
+<li><p><strong>theta_dist</strong> (<em>bool</em><em>, </em><em>optional</em>) – distributions of incident angle (initial and measured)</p></li>
+<li><p><strong>ang_dist</strong> (<em>bool</em><em>, </em><em>optional</em>) – distribution of measured anlges for a given initial angle</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.load_response">
+<span class="sig-name descname"><span class="pre">load_response</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.load_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.load_response" title="Link to this definition"></a></dt>
+<dd><p>Load response file and corresponding normalization.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently there are 5 different histograms used for
+analyzing the sims. It might be better to combine these to a single file.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.get_total_edisp_matrix">
+<span class="sig-name descname"><span class="pre">get_total_edisp_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta_bin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_sanity_checks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rsp_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.get_total_edisp_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.get_total_edisp_matrix" title="Link to this definition"></a></dt>
+<dd><p>Get the energy dispersion matrix.</p>
+<p>The total energy dispersion is the sum of the transmitted
+photons (which don’t scatter) and the scattered photons.
+Here I calculate all three: transmitted, scattered, and total.
+Likewise, I calculate the transmission probability for all three.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta_bin</strong> (<em>int</em>) – Index of incident angle.</p></li>
+<li><p><strong>show_sanity_checks</strong> (<em>bool</em><em>, </em><em>optional</em>) – Print a comparison of total energy dispersion
+to summed energy dispersion (beam + scattered), and also for
+transmission probability, to verify that they are the same.
+Default is False.</p></li>
+<li><p><strong>make_plots</strong> (<em>bool</em><em>, </em><em>optional</em>) – Show plots (default is True).</p></li>
+<li><p><strong>rsp_file</strong> (<em>bool</em><em>, </em><em>optional</em>) – Option to load resonse from hdf5 file.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.normalize_response">
+<span class="sig-name descname"><span class="pre">normalize_response</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.normalize_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.normalize_response" title="Link to this definition"></a></dt>
+<dd><p>Normalizes the atmospheric response matrix by the total
+photons thrown in E_i and theta_i.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.ProcessSpherical.make_edisp_matrix">
+<span class="sig-name descname"><span class="pre">make_edisp_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta_bin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'total'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/ProcessSphericalSims.html#ProcessSpherical.make_edisp_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.ProcessSpherical.make_edisp_matrix" title="Link to this definition"></a></dt>
+<dd><p>Make energy dispersion matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta_bin</strong> (<em>int</em>) – index of incident angle.</p></li>
+<li><p><strong>comp</strong> (<em>str</em><em>, </em><em>optional</em>) – Component to use for constructing matrix. Either
+transmitted, scattered, or total (default is total).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Atmosphere">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cosi_atmosphere.response.</span></span><span class="sig-name descname"><span class="pre">Atmosphere</span></span><a class="reference internal" href="../_modules/cosi_atmosphere/response/AtmosphericProfile.html#Atmosphere"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Atmosphere" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="cosi_atmosphere.response.Atmosphere.get_atm_profile">
+<span class="sig-name descname"><span class="pre">get_atm_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lons</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cosi_atmosphere/response/AtmosphericProfile.html#Atmosphere.get_atm_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cosi_atmosphere.response.Atmosphere.get_atm_profile" title="Link to this definition"></a></dt>
+<dd><p>Get atmospher model from NRLMSIS:
+Naval Research Laboratory’s Mass Spectrometer Incoherent Scatter Radar model.</p>
+<p>For pymsis homepage see: <a class="reference external" href="https://swxtrec.github.io/pymsis/index.html">https://swxtrec.github.io/pymsis/index.html</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>) – Name of output data file.</p></li>
+<li><p><strong>dates</strong> (<em>ArrayLike</em>) – Dates and time of interest.</p></li>
+<li><p><strong>lons</strong> (<em>ArrayLike:</em>) – Longitudes of interest in degrees.</p></li>
+<li><p><strong>lats</strong> (<em>ArrayLike</em>) – Latitudes of interest in degrees.</p></li>
+<li><p><strong>alts</strong> (<em>ArrayLike</em>) – Altitudes of interest in km.</p></li>
+<li><p><strong>version</strong> (<em>float</em><em>, </em><em>optional</em>) – MSIS version number, one of (0,2.0,2.1). Default is 2.1.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All inputs take arrays; however, for now use single
+values for dates, lons, and lats. The only array should be alts,
+since for this method we mainly want the altitude profile.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>atm_dict</strong> – Dictionary with atmospheric information. Keys are altitude[km],
+mass_density[kg/m3], N2[m-3], O2[m-3], O[m-3], He[m-3], H[m-3],
+Ar[m-3], N[m-3], anomalous_oxygen[m-3], NO[m-3], and Temperature[k].</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Chris Karwin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
