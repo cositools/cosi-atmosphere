@@ -2,7 +2,6 @@ pandas
 numpy
 matplotlib
 histpy
-scipy
 astropy
 healpy
 pymsis
