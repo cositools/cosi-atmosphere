@@ -5,3 +5,4 @@ histpy
 astropy
 healpy
 pymsis
+nbsphinx
