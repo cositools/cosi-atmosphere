@@ -19,7 +19,7 @@ Getting Help
 For problems with the code please open an issue in github. For further assistance, please email Chris Karwin at christopher.m.karwin@nasa.gov. 
 
 .. warning::
-   While many features are already available, cosi-atmosphere is still actively under development. Note that the current releases are not stable and various components can be modified or deprecated shortly.
+   The cosi-atmosphere package is still actively under development. Note that the current releases are not stable and various components can be modified or deprecated shortly.
 
 Contributing
 ------------
