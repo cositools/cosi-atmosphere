@@ -1,8 +1,6 @@
 Installation
 ============
 
-The stacking analysis requires MEGAlib. 
-
 Using pip
 ---------
 
