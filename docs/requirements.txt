@@ -1,10 +1,2 @@
-pandas
-numpy
-matplotlib
-histpy
-astropy
-healpy
-pymsis
-scipy
 nbsphinx
 sphinx_rtd_theme
