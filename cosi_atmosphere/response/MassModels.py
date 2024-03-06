@@ -9,19 +9,19 @@ import os,sys
 
 class MakeMassModels:
 
+    """Generates a mass model based on input atmospheric data.
+
+    Parameters
+    ----------
+    atmosphere_file : str
+        Input file describing the atmosphere, calculated with 
+        Atmospheric_profile class, based on NRLMSIS. 
+    kwargs : dict, optional 
+        Pass any kwargs to pandas read_csv method. 
+    """
+
     def __init__(self, atmosphere_file, kwargs={}):
-
-        """Generates a mass model based on input atmospheric data.
-
-        Parameters
-        ----------
-        atmosphere_file : str
-            Input file describing the atmosphere, calculated with 
-            Atmospheric_profile class, based on NRLMSIS. 
-        kwargs : dict, optional 
-            Pass any kwargs to pandas read_csv method. 
-        """
-        
+ 
         # Get test directory:
         path_prefix = os.path.split(MassModels.__file__)[0]
         self.test_dir = os.path.join(path_prefix,"test_files")
