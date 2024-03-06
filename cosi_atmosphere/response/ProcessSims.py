@@ -19,23 +19,23 @@ import matplotlib.colors as colors
 
 class Process:
 
+    """Analyze atmophere simulations.
+        
+    Parameters
+    ----------
+    theta : float 
+        Off-axis angle of source in degrees.
+    all_events_file : str, optional 
+        Event file with all thrown events (default is output 
+        from ParseSims method). 
+    measured_events_file : str, optional 
+        Event file with all measured events (default is output 
+        from ParseSims method). 
+    """
+
     def __init__(self, theta, all_events_file="all_thrown_events.dat", \
             measured_events_file="event_list.dat"):
-    
-        """Analyze atmophere simulations.
-        
-        Parameters
-        ----------
-        theta : float 
-            Off-axis angle of source in degrees.
-        all_events_file : str, optional 
-            Event file with all thrown events (default is output 
-            from ParseSims method). 
-        measured_events_file : str, optional 
-            Event file with all measured events (default is output 
-            from ParseSims method). 
-        """
-        
+     
         # Get test directory:
         path_prefix = os.path.split(ProcessSims.__file__)[0]
         self.test_dir = os.path.join(path_prefix,"test_files")
