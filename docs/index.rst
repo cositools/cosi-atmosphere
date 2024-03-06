@@ -8,7 +8,7 @@ This package contains code for dealing with atmospheric effects in gamma-ray ast
 
 Methodology
 -----------
-A mass model of Earth's atmosphere is created, using atmospheric data. This is a test. 
+A mass model of Earth's atmosphere is created, using atmospheric data. This is another test. 
 
 Requirements
 ------------
