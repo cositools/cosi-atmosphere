@@ -43,6 +43,7 @@ autodoc_mock_imports = ['pymsis',
                         'astropy',
                         'healpy',
                         'mhealpy',
+                        'h5py',
                         'scipy']
 
 # Add any paths that contain templates here, relative to this directory.
