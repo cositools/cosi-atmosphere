@@ -8,7 +8,6 @@ Install with pip::
   
   pip install cosi-atmosphere
 
-
 From source (for developers)
 ----------------------------
  
