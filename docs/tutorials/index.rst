@@ -1,8 +1,6 @@
 Tutorials
 =========
 
-Rectangular mass model `(link) <https://github.com/cositools/cosi-atmosphere/tree/main/docs/tutorials/rectangular_mass_model>`_
-
 .. warning::
    Under construction.
     
