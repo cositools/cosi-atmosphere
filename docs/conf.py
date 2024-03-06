@@ -35,7 +35,14 @@ extensions = ['sphinx.ext.mathjax',
               'nbsphinx'
 ]
 
-autodoc_mock_imports = ['pymsis']
+autodoc_mock_imports = ['pymsis',
+                        'pandas',
+                        'numpy',
+                        'matplotlib',
+                        'histpy',
+                        'astropy',
+                        'healpy',
+                        'scipy']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
