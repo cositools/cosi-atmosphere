@@ -247,8 +247,7 @@ class Process:
         self.measured_photons_baseline = Histogram([self.energy_bin_edges, self.radial_bins, \
                 self.xym_bins, self.xym_bins, self.incident_ang_bins],\
                 labels=["Em [keV]", "rm [km]", "xm [cm]", "ym [cm]", "theta_prime [deg]"])
-        self.measured_photons_baseline.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle, 
-                weight=np.cos(np.deg2rad(self.theta))/np.cos(np.deg2rad(self.incident_angle)))
+        self.measured_photons_baseline.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle)
         self.measured_photons_baseline.write(measured_ph_output, overwrite=True)
         
         # Make weighted histogram.
@@ -652,7 +651,7 @@ class Process:
 
         return
 
-    def make_edisp_matrix(self, idm_watch, em_watch, write_hist=False):
+    def make_edisp_matrix(self, idm_watch, em_watch, ia_watch, write_hist=False):
 
         """Make energy dispersion matrix.
 
@@ -662,6 +661,8 @@ class Process:
             IDs of measured photons for watched region.
         em_watch : ArrayLike 
             Energy histogram of photons for watched region.
+        ia_watch : ArrayLike
+            Angle histogram of photons for watched region. 
         write_hist : bool
             Option to save histogram to hdf5.
         """
