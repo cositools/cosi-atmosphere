@@ -102,53 +102,34 @@ class ProcessSpherical(ProcessSims.Process):
         self.lat_dm = self.sp_coords_dm[1].deg  # deg
         self.lon_dm = self.sp_coords_dm[2].deg # deg
 
+        # Define surface normal for measured photons:
+        nm = -1*np.array([self.xm,self.ym,self.zm]).T
+
         # Get points of intersection:
-        # Note: this isn't used anymore, but I'll
-        # keep it here for now, as well as corresponding
-        # functions, because it may be useful later on. 
         o = np.array([self.xi,self.yi,self.zi]).T # cm
         u = np.array([self.xdi,self.ydi,self.zdi]).T # cm
         r = (self.r_earth + self.r_alt) * 1e5 # cm
         intersecting_points = self.find_projection(o,u,r)
         
-        # Define surface normal for measured photons:
-        nm = -1*np.array([self.xm,self.ym,self.zm]).T
-        
         # Define surface normal for initial photons:
-        #
-        # With our simulation setup, this will actually 
-        # be the same as nm. However, in this scheme, 
-        # ni is undefined for photons that are not measured.
-        # Currently, undefined ni are being ignored,
-        # and this seems to give the correct solution. 
-        # The main calibration here is comparison with 
-        # the rectangular geometery, as well as comparison 
-        # to real atmospheric data. 
-        #
-        # We'll first define the array using initial positions,
-        # in order to get the right shape. Then we'll update values below.
-        ni = -1*np.array([self.xi,self.yi,self.zi]).T
-
-        # Set ni to nm for measured photons: 
-        keep_index = np.isin(self.idi,self.idm)
+        ni = -1*intersecting_points
         ni[keep_index] = nm
-    
-        # Get incident angle for initial photons:
-        self.incident_angle_i = self.angle(vi,ni)*(180/np.pi) # degrees
-
-        # Set incident angle of un-measured photons to arbitrarily high angle:
-        print()
-        print("WARNING: Not all incident angles are defined.")
-        print("Number of undefined incident angles: " + str(len(self.incident_angle_i[~keep_index])))
-        print("Setting undefined incident angles to 400 degrees")
-        print()
-        self.incident_angle_i[~keep_index] = 1e6
-
+ 
         # Get incident angle for measured photons:
         self.incident_angle_m = self.angle(vm,nm)*(180/np.pi) # degrees
 
+        # Get incident angle for initial photons:
+        self.incident_angle_i = self.angle(vi,ni)*(180/np.pi) # degrees
+
         # Incident angle in degrees:
         self.theta = theta
+
+        print()
+        print("Total number of initial events: " + str(len(self.idi[:])))
+        print("Total number of unmeasured events: " + str(len(self.idi[~keep_index])))
+        print("WARNING: Not all incident angles are defined.")
+        print("Number of undefined incident angles: " + str(len(self.incident_angle_i[np.isnan(self.incident_angle_i)])))
+        print()
 
         return
 
@@ -311,7 +292,7 @@ class ProcessSpherical(ProcessSims.Process):
 
         return intersection
 
-    def bin_sim(self, elow=10, ehigh=10000, num_ebins=17, \
+    def bin_sim(self, name, elow=10, ehigh=10000, num_ebins=17, \
             anglow=0, anghigh=100, num_angbins=26,  nside=16, scheme='ring'):
 
         """Bins the simulations, and writes output files 
@@ -323,6 +304,8 @@ class ProcessSpherical(ProcessSims.Process):
 
         Parameters
         ----------
+        name : str
+            Name of output response file (use .hdf5 or .h5 extension). 
         elow : float, optional
             Lower energy bound in keV (defualt is 100 keV). 
         ehigh : float, optional 
@@ -339,6 +322,16 @@ class ProcessSpherical(ProcessSims.Process):
             nside for healpix binning (defualt is 16).
         scheme : str, optional 
             Scheme for healpix binning (ring or nested). Default is ring.
+        
+        Note
+        ----
+        Response file contains 5 different histograms, each stored as 
+        its own group. The group names are:
+        1. primary_rsp
+        2. starting_photons
+        3. starting_photons_rsp
+        4. measured_photons
+        5. measured_photons_rsp
         """
         
         # Define energy bin edges: 
@@ -414,14 +407,16 @@ class ProcessSpherical(ProcessSims.Process):
                 self.incident_ang_bins, self.incident_ang_bins],\
                 labels=["Ei [keV]", "Em [keV]", "theta_i [deg]", "theta_m [deg]"], sparse=True)
         self.primary_rsp.fill(self.ei[keep_index], self.em, \
-                self.incident_angle_i[keep_index], self.incident_angle_m)
+                self.incident_angle_i[keep_index], self.incident_angle_m, \
+                weight=np.cos(np.deg2rad(self.incident_angle_i[keep_index]))/np.cos(np.deg2rad(self.incident_angle_m)))
 
         # Write response to file:
-        self.starting_photons.write('starting_photons.hdf5', overwrite=True)
-        self.starting_photons_rsp.write('starting_photons_rsp.hdf5', overwrite=True)
-        self.measured_photons.write('measured_photons.write.hdf5', overwrite=True)
-        self.measured_photons_rsp.write('measured_photons_rsp.hdf5', overwrite=True)
-        self.primary_rsp.write('primary_rsp.hdf5', overwrite=True)
+        savefile = name 
+        self.starting_photons.write(savefile, name='starting_photons', overwrite=True)
+        self.starting_photons_rsp.write(savefile, name ='starting_photons_rsp', overwrite=True)
+        self.measured_photons.write(savefile, name='measured_photons', overwrite=True)
+        self.measured_photons_rsp.write(savefile, name='measured_photons_rsp', overwrite=True)
+        self.primary_rsp.write(savefile, name='primary_rsp', overwrite=True)
         
         # Get binning info:
         self.get_binning_info()
@@ -468,7 +463,7 @@ class ProcessSpherical(ProcessSims.Process):
     def make_scattering_plots(self, pos_init=True, pos_meas=True, pos_proj=True,\
             pos_ang_ri=True, pos_ang_di=True, ri=True,\
             pos_ang_rm=True, pos_ang_dm=True, rm=True,\
-            theta_dist=True, ang_dist=True):
+            theta_dist=True, ang_dist=True, rsp_file=None):
         
         """Visualize the simulated photons. 
 
@@ -496,7 +491,18 @@ class ProcessSpherical(ProcessSims.Process):
             distributions of incident angle (initial and measured) 
         ang_dist : bool, optional 
             distribution of measured anlges for a given initial angle
+        rsp_file : str, optional
+            Name of response file to use.
         """
+       
+        # Make sure response is loaded:
+        if rsp_file != None:
+            self.load_response(rsp_file)
+        try:
+            self.incident_ang_bins
+        except:
+            print("ERROR: Need to load response file.")
+            sys.exit()
         
         # Initial photons 3d position: 
         if pos_init == True:
@@ -753,20 +759,18 @@ class ProcessSpherical(ProcessSims.Process):
             print(self.incident_ang_centers)
             print(self.energy_bin_centers)
             print("energy: " + str(self.energy_bin_centers[15])) # 7 (261 keV), 15 (8 MeV)  
-            dist = self.primary_rsp.slice[{"theta_i [deg]":ang_bin,"Ei [keV]":7}].project(["theta_m [deg]"]).contents.todense()
+            dist = self.primary_rsp.slice[{"theta_i [deg]":ang_bin,"Ei [keV]":15}].project(["theta_m [deg]"]).contents.todense()
             plt.semilogy(self.incident_ang_centers,dist,marker='o',ls="-",label="true")
            
-            ang_i = self.incident_ang_centers[ang_bin] * (np.pi/180)
-            new = (np.cos(ang_i)/np.cos((np.pi/180.0)*self.incident_ang_centers))*dist
+            #ang_i = self.incident_ang_centers[ang_bin] * (np.pi/180)
+            #new = (np.cos(ang_i)/np.cos((np.pi/180.0)*self.incident_ang_centers))*dist
             #new *= (np.sin(ang_i)/np.sin((np.pi/180.0)*self.incident_ang_centers))
-            plt.semilogy(self.incident_ang_centers,new,marker='o',ls="-.", color="red",label=r"scaled by cos($\theta_i$)/cos($\theta_m$)")
+            #plt.semilogy(self.incident_ang_centers,new,marker='o',ls="-.", color="red",label=r"scaled by cos($\theta_i$)/cos($\theta_m$)")
 
-            ang_i = self.incident_ang_centers[ang_bin] * (np.pi/180)
-            new = (np.cos(ang_i)/np.cos((np.pi/180.0)*self.incident_ang_centers))*dist
-            new *= (np.sin(ang_i)/np.sin((np.pi/180.0)*self.incident_ang_centers))
-            plt.semilogy(self.incident_ang_centers,new,marker='o',ls="--", color="cyan",label=r"scaled by cos($\theta_i$)sin($\theta_i$)/cos($\theta_m$)sin($\theta_m$)")
-            
-
+            #ang_i = self.incident_ang_centers[ang_bin] * (np.pi/180)
+            #new = (np.cos(ang_i)/np.cos((np.pi/180.0)*self.incident_ang_centers))*dist
+            #new *= (np.sin(ang_i)/np.sin((np.pi/180.0)*self.incident_ang_centers))
+            #plt.semilogy(self.incident_ang_centers,new,marker='o',ls="--", color="cyan",label=r"scaled by cos($\theta_i$)sin($\theta_i$)/cos($\theta_m$)sin($\theta_m$)")
             plt.xlabel(r"$\theta$",fontsize=14)
             plt.ylabel("Counts",fontsize=14)
             plt.grid(ls="--",color="grey",alpha=0.4)
@@ -775,26 +779,27 @@ class ProcessSpherical(ProcessSims.Process):
 
         return
    
-    def load_response(self):
+    def load_response(self, name):
 
         """Load response file and corresponding normalization.
 
-        Note
-        ----
-        Currently there are 5 different histograms used for 
-        analyzing the sims. It might be better to combine these to a single file. 
+        Parameters
+        ----------
+        name, str
+            Name of response file.
         """
-
-        self.primary_rsp = Histogram.open('primary_rsp.hdf5')
-        self.starting_photons = Histogram.open('starting_photons.hdf5')
-        self.starting_photons_rsp = Histogram.open('starting_photons_rsp.hdf5')
-        self.measured_photons = Histogram.open('measured_photons.write.hdf5')
-        self.measured_photons_rsp = Histogram.open('measured_photons_rsp.hdf5')
+    
+        savefile = name 
+        self.primary_rsp = Histogram.open(savefile, name='primary_rsp')
+        self.starting_photons = Histogram.open(savefile, name='starting_photons')
+        self.starting_photons_rsp = Histogram.open(savefile, name='starting_photons_rsp')
+        self.measured_photons = Histogram.open(savefile, name='measured_photons')
+        self.measured_photons_rsp = Histogram.open(savefile, name='measured_photons_rsp')
         self.get_binning_info()
 
         return
 
-    def get_total_edisp_matrix(self, theta_bin, show_sanity_checks=False, make_plots=True, rsp_file=None):
+    def get_total_edisp_matrix(self, theta, show_sanity_checks=False, make_plots=True, rsp_file=None):
 
         """Get the energy dispersion matrix. 
         
@@ -805,8 +810,8 @@ class ProcessSpherical(ProcessSims.Process):
 
         Parameters
         ----------
-        theta_bin : int
-            Index of incident angle. 
+        theta : float
+            Incident angle of source. 
         show_sanity_checks : bool, optional 
             Print a comparison of total energy dispersion
             to summed energy dispersion (beam + scattered), and also for 
@@ -814,13 +819,16 @@ class ProcessSpherical(ProcessSims.Process):
             Default is False.
         make_plots : bool, optional 
             Show plots (default is True).
-        rsp_file : bool, optional 
-            Option to load resonse from hdf5 file.
+        rsp_file : str, optional 
+            Name of response file to load. 
         """
 
         # Option to load response from file:
         if rsp_file != None:
             self.load_response(rsp_file)
+    
+        # Get theta bin:
+        theta_bin = self.get_theta_bin(theta)
 
         # Normalize response:
         self.normalize_response()
@@ -876,6 +884,44 @@ class ProcessSpherical(ProcessSims.Process):
 
         return
 
+    def get_theta_bin(self,theta,rsp_file=None):
+
+        """Returns index of the theta bin.
+        
+        Parameters
+        ----------
+        theta : float
+            Incident angle in degrees.
+        rsp_file : str, optional
+            Prefix of response file to load.
+
+        Returns
+        -------
+        theta_bin : int
+            Index of theta bin. 
+        """
+       
+        # Make sure response is loaded:
+        if rsp_file != None:
+            self.load_response(rsp_file)
+        try:
+            self.incident_ang_bins
+        except:
+            print("ERROR: Need to specify response file.")
+            sys.exit()
+
+        # Find bin index:
+        for i in range(0,len(self.incident_ang_bins)):
+            try:
+                if (theta >= self.incident_ang_bins[i]) & (theta < self.incident_ang_bins[i+1]):
+                    theta_index = i
+                    break
+            except: 
+                print("ERROR: theta not found.")
+                sys.exit()
+    
+        return theta_index
+
     def normalize_response(self):
 
         """Normalizes the atmospheric response matrix by the total 
@@ -885,7 +931,11 @@ class ProcessSpherical(ProcessSims.Process):
         # Normalization factor:
         N = self.starting_photons_rsp.contents.todense()
         N = np.array(N)
-        
+        print()
+        print("Total number of photons in response normalization:")
+        print(np.sum(N))
+        print()
+
         # Set 0 bins to arbitrary large number to avoid division by 0:
         N[N==0] = 1e12
         
@@ -906,38 +956,30 @@ class ProcessSpherical(ProcessSims.Process):
             Component to use for constructing matrix. Either 
             transmitted, scattered, or total (default is total). 
         """
-        
-        # Geometeric correction factor:
-        make_geo_correction = True
-        geo_correction_cos = np.cos((np.pi/180.0)*self.incident_ang_centers)
-        geo_correction_sin = np.sin((np.pi/180.0)*self.incident_ang_centers)
-
+    
         # Project onto em, ei:
         if comp == "transmitted":
             self.edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, 
                 "theta_m [deg]":theta_bin}].project(["Em [keV]", "Ei [keV]"]).contents
             self.edisp_array = np.array(self.edisp_array) 
 
-        max_theta_bin = 21 #20 #25
-        print("max theta: " + str(self.incident_ang_centers[max_theta_bin]))
         if comp == "scattered":
+            
+            # Need to skip 90 degree bin, b/c it's undefined from scaling factor:
+            deg90_bin = self.get_theta_bin(90)
+
+            # Sum over all measured angles except source incident angle and 90 degrees:
             counter = 0
-            for i in range(0,max_theta_bin+1):
-                if (i != theta_bin):
+            for i in range(0,len(self.incident_ang_centers)):
+                if (i != theta_bin) & (i != deg90_bin):
                     if counter == 0:
                         this_edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, 
                             "theta_m [deg]":i}].project(["Em [keV]", "Ei [keV]"]).contents
-                        if make_geo_correction == True:
-                            this_edisp_array *= (geo_correction_cos[theta_bin]/geo_correction_cos[i])
-                            this_edisp_array *= (geo_correction_sin[theta_bin]/geo_correction_sin[i])
                         self.edisp_array = np.array(this_edisp_array) 
                         counter += 1
                     if counter != 0:
                         this_edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, 
                             "theta_m [deg]":i}].project(["Em [keV]", "Ei [keV]"]).contents
-                        if make_geo_correction == True:
-                            this_edisp_array *= (geo_correction_cos[theta_bin]/geo_correction_cos[i])
-                            this_edisp_array *= (geo_correction_sin[theta_bin]/geo_correction_sin[i])
                         self.edisp_array += np.array(this_edisp_array) 
 
         if comp == "total":
