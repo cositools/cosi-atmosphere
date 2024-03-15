@@ -43,7 +43,7 @@ class ProcessSpherical(ProcessSims.Process):
      
         # Get test directory:
         path_prefix = os.path.split(ProcessSims.__file__)[0]
-        self.test_dir = os.path.join(path_prefix,"test_files")
+        self.test_dir = os.path.join(path_prefix,"data_files")
 
         # Define Earth radius:
         self.r_earth = 6.378e8 * (1e-5) # km
@@ -799,7 +799,7 @@ class ProcessSpherical(ProcessSims.Process):
 
         return
 
-    def get_total_edisp_matrix(self, theta, show_sanity_checks=False, make_plots=True, rsp_file=None):
+    def get_total_edisp_matrix(self, theta, make_plots=True, rsp_file=None, tp_file=None):
 
         """Get the energy dispersion matrix. 
         
@@ -812,15 +812,13 @@ class ProcessSpherical(ProcessSims.Process):
         ----------
         theta : float
             Incident angle of source. 
-        show_sanity_checks : bool, optional 
-            Print a comparison of total energy dispersion
-            to summed energy dispersion (beam + scattered), and also for 
-            transmission probability, to verify that they are the same. 
-            Default is False.
         make_plots : bool, optional 
             Show plots (default is True).
         rsp_file : str, optional 
             Name of response file to load. 
+        tp_file : str, optional
+            Option to overlay TP from analytical calculation in plot. 
+            Specify file name from TPCalc class. Default is None.  
         """
 
         # Option to load response from file:
@@ -849,22 +847,6 @@ class ProcessSpherical(ProcessSims.Process):
         # Make total edisp array:
         self.normed_edisp_array_total, \
         self.tp_total = self.make_edisp_matrix(theta_bin,comp="total")
-
-        # Calculate total as sum of beam and scattered (sanity check):
-        self.normed_edisp_array_summed = \
-        self.normed_edisp_array_beam + self.normed_edisp_array_scattered
-        diff = self.normed_edisp_array_summed - self.normed_edisp_array_total
-        if show_sanity_checks == True:
-            print()
-            print("difference b/n total and summed edisp arrays:")
-            print(diff)
-            print()
-            self.tp_summed = self.tp_beam + self.tp_scattered
-            diff = self.tp_summed - self.tp_total
-            print()
-            print("difference b/n total and summed TP arrays:")
-            print(diff)
-            print()
  
         if make_plots == True:
 
@@ -880,7 +862,8 @@ class ProcessSpherical(ProcessSims.Process):
                     "edisp_matrix_total.png")
        
             # Plot transmission probability:
-            self.plot_tp_from_edisp()
+            print("plotting transmission probability...")
+            self.plot_tp_from_edisp(tp_file=tp_file)
 
         return
 

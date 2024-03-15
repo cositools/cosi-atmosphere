@@ -38,7 +38,7 @@ class Process:
      
         # Get test directory:
         path_prefix = os.path.split(ProcessSims.__file__)[0]
-        self.test_dir = os.path.join(path_prefix,"test_files")
+        self.test_dir = os.path.join(path_prefix,"data_files")
 
         # Off-axis angle of source:
         self.theta = theta
@@ -717,21 +717,37 @@ class Process:
 
         return
 
-    def plot_tp_from_edisp(self):
+    def plot_tp_from_edisp(self,tp_file=None):
 
-        """Plot the transmission probability."""
+        """Plot the transmission probability.
         
-        # Get original TP (sanity check):
-        e_official, tp_official = self.get_tp_from_file()
+        Parameters
+        ----------
+        tp_file : str, optional
+            Option to overlay TP from analytical calculation in plot. 
+            Specify file name from TPCalc class. Default is None. 
+        """
         
+        # Get original TP 
+        # Sanity check for now. Can probably remove soon. 
+        #e_official, tp_official = self.get_tp_from_file()
+        #plt.semilogx(e_official, tp_official, marker="", ls="-", color="black", label="original")
+
         # Plot TP:
         plt.semilogx(self.emean, self.tp_total, marker="o", ls="--", label="Total")
         plt.semilogx(self.emean, self.tp_beam, marker="s", ls="-", label="Transmitted")
         plt.semilogx(self.emean, self.tp_scattered, marker="^", ls=":", label="Scattered")
+        
+        # Plot TP from analytical calculation:
+        if tp_file != None:
+            df = pd.read_csv(tp_file,delim_whitespace=True)
+            plt.semilogx(df["energy[MeV]"]*1000, df["TP"], marker="", ls="-", color="grey", label="Analytical")
+        
         plt.xlabel("Ei [keV]", fontsize=14)
-        plt.ylabel("Transmission Probability", fontsize=14)
+        plt.ylabel("Detection Fraction", fontsize=14)
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
+        plt.xlim(10,1e4)
         plt.legend(loc=2,ncol=1,frameon=False,fontsize=12)
         plt.grid(ls=":",color="grey",alpha=0.4)
         plt.savefig("transmission_probability_from_edisp.pdf")
