@@ -706,7 +706,7 @@ class Process:
         ax.set_xscale('log')
         ax.set_yscale('log')
         cbar = plt.colorbar(img,fraction=0.045)
-        cbar.set_label("Probability", fontsize=12)
+        cbar.set_label("Detection Fraction", fontsize=12)
         plt.xlabel("Ei [keV]", fontsize=14)
         plt.ylabel("Em [keV]", fontsize=14)
         plt.xticks(fontsize=12)
