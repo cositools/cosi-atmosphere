@@ -11,6 +11,6 @@ setup(
     packages=find_packages(),
     install_requires = ['histpy','pandas','healpy','pymsis'],
     include_package_data=True,
-    package_data={'':['response/test_files/*']},
+    package_data={'':['response/data_files/*']},
     description = 'Tools for calculating atmospheric response and background'
 )
