@@ -463,7 +463,7 @@ class ProcessSpherical(ProcessSims.Process):
     def make_scattering_plots(self, pos_init=True, pos_meas=True, pos_proj=True,\
             pos_ang_ri=True, pos_ang_di=True, ri=True,\
             pos_ang_rm=True, pos_ang_dm=True, rm=True,\
-            theta_dist=True, ang_dist=True, rsp_file=None):
+            theta_dist=True, ang_dist=None, spec=True, rsp_file=None):
         
         """Visualize the simulated photons. 
 
@@ -489,8 +489,12 @@ class ProcessSpherical(ProcessSims.Process):
             measured radius with respect to Earth center 
         theta_dist : bool, optional 
             distributions of incident angle (initial and measured) 
-        ang_dist : bool, optional 
-            distribution of measured anlges for a given initial angle
+        ang_dist : list, optional 
+            Distribution of measured anlges for a given initial angle.
+            Takes list with incident angle in degrees and energy in keV. 
+            Default is None. 
+        spec : bool, optional
+            Spectrum of initial and measured photons (dN/dE). 
         rsp_file : str, optional
             Name of response file to use.
         """
@@ -719,8 +723,10 @@ class ProcessSpherical(ProcessSims.Process):
             # Plot distributions:
             theta_i = np.array(self.starting_photons_rsp.project("theta_i [deg]").contents.todense())
             theta_m = np.array(self.measured_photons_rsp.project("theta_m [deg]").contents.todense())
+            theta_m_weighted = np.array(self.primary_rsp.project("theta_m [deg]").contents.todense())
             plt.stairs(theta_i/d_theta,self.incident_ang_bins,label="initial",ls="-",lw=2)
             plt.stairs(theta_m/d_theta,self.incident_ang_bins,label="measured",ls="--",lw=2)
+            plt.stairs(theta_m_weighted/d_theta,self.incident_ang_bins,label="measured (weighted)",ls="--",lw=2)
             plt.plot(self.incident_ang_bins,analytical_soln,label="analytical",ls=":",lw=3,color="grey",zorder=0,alpha=0.8)
             plt.yscale("log")
             plt.ylabel(r"$\Delta \Phi / \Delta \theta$  [$\mathrm{ph \ rad^{-1}}$]", fontsize=14)
@@ -730,14 +736,14 @@ class ProcessSpherical(ProcessSims.Process):
             plt.xticks(fontsize=12)
             plt.yticks(fontsize=12)
             plt.grid(ls="--",color="grey",alpha=0.3)
-            plt.legend(loc=1,frameon=False,fontsize=12)
+            plt.legend(loc=1,ncol=2,frameon=False,fontsize=12)
             plt.savefig("theta_distributions.pdf")
             plt.show()
             plt.close()
 
             # Plot fraction:
             ang_bins = np.array(self.incident_ang_bins)
-            
+            theta_distributions.pdf
             # Note: Need to avoid overflow bin, so we take len(ang_bins) - 1:
             frac = (theta_m[0:len(ang_bins)-1]/theta_i[0:len(ang_bins)-1])
             plt.plot(ang_bins[0:len(ang_bins)-1],frac,ls="--",marker="o",color="black")
@@ -752,31 +758,87 @@ class ProcessSpherical(ProcessSims.Process):
             plt.show()
             plt.close()
     
-        if ang_dist == True:
-           
-            # This is still being tested. 
-            ang_bin = 12 # 0, 8 (34 deg), 12 (50 deg)
-            print(self.incident_ang_centers)
-            print(self.energy_bin_centers)
-            print("energy: " + str(self.energy_bin_centers[15])) # 7 (261 keV), 15 (8 MeV)  
-            dist = self.primary_rsp.slice[{"theta_i [deg]":ang_bin,"Ei [keV]":15}].project(["theta_m [deg]"]).contents.todense()
-            plt.semilogy(self.incident_ang_centers,dist,marker='o',ls="-",label="true")
-           
-            #ang_i = self.incident_ang_centers[ang_bin] * (np.pi/180)
-            #new = (np.cos(ang_i)/np.cos((np.pi/180.0)*self.incident_ang_centers))*dist
-            #new *= (np.sin(ang_i)/np.sin((np.pi/180.0)*self.incident_ang_centers))
-            #plt.semilogy(self.incident_ang_centers,new,marker='o',ls="-.", color="red",label=r"scaled by cos($\theta_i$)/cos($\theta_m$)")
+        if ang_dist != None:
+         
+            # Get angular bin:
+            ang_bin = self.get_theta_bin(ang_dist[0])
+            print("Using incident angle of %s deg" %str(ang_dist[0]))
+            print("Corresponding to angular bin %s" %str(ang_bin))
 
-            #ang_i = self.incident_ang_centers[ang_bin] * (np.pi/180)
-            #new = (np.cos(ang_i)/np.cos((np.pi/180.0)*self.incident_ang_centers))*dist
-            #new *= (np.sin(ang_i)/np.sin((np.pi/180.0)*self.incident_ang_centers))
-            #plt.semilogy(self.incident_ang_centers,new,marker='o',ls="--", color="cyan",label=r"scaled by cos($\theta_i$)sin($\theta_i$)/cos($\theta_m$)sin($\theta_m$)")
-            plt.xlabel(r"$\theta$",fontsize=14)
+            # Get energy bin:
+            energy_bin = self.get_energy_bin(ang_dist[1])
+            print("Using energy of %s keV" %str(ang_dist[1]))
+            print("Corresponding to energy bin %s" %str(energy_bin))
+
+            # Plot weighted histogram:
+            dist = self.primary_rsp.slice[{"theta_i [deg]":ang_bin,"Ei [keV]":energy_bin}].project(["theta_m [deg]"]).contents.todense()
+            plt.semilogy(self.incident_ang_centers,dist,marker='o',ls="-",label=r"weighted by cos($\theta_i$)/cos($\theta_m$)")
+           
+            # Plot un-weighted histogram:
+            ang_i = self.incident_ang_centers[ang_bin] * (np.pi/180)
+            new = (1.0/(np.cos(ang_i)/np.cos((np.pi/180.0)*self.incident_ang_centers)))*dist
+            plt.semilogy(self.incident_ang_centers,new,marker='o',ls="-.", color="red",label=r"un-weighted")
+
+            # Plot alternative weighting, which includes additional sin factor:
+            # This is an alternative weighting, which I'll keep here for now. 
+            #new = (np.sin(ang_i)/np.sin((np.pi/180.0)*self.incident_ang_centers))*dist
+            #plt.semilogy(self.incident_ang_centers,new,marker='o',ls="--", 
+            #color="cyan",label=r"weighted by cos($\theta_i$)sin($\theta_i$)/cos($\theta_m$)sin($\theta_m$)")
+            
+            plt.xlabel(r"$\theta_m$ [$\circ$]",fontsize=14)
             plt.ylabel("Counts",fontsize=14)
             plt.grid(ls="--",color="grey",alpha=0.4)
+            plt.ylim(1,1e7)
             plt.legend(loc=1,frameon=True)
+            savefile = "ang_dist_%s_%s.pdf" %(str(ang_dist[0]),str(ang_dist[1]))
+            plt.savefig(savefile)
             plt.show()
 
+        # Photon spectrum (dN/dE):
+        if spec == True:
+
+            # Starting distribution:
+            print("Initial energy distribution:")
+            underflow = self.starting_photons_rsp.project("Ei [keV]")[-1]
+            overflow = self.starting_photons_rsp.project("Ei [keV]")[self.measured_photons_rsp.end]
+            print("underflow bin: " + str(underflow))
+            print("overflow bin: " + str(overflow))
+
+            # Measured distribution:
+            print("Measured energy distribution")
+            underflow = self.measured_photons_rsp.project("Em [keV]")[-1]
+            overflow = self.measured_photons_rsp.project("Em [keV]")[self.measured_photons_rsp.end]
+            print("underflow bin: " + str(underflow))
+            print("overflow bin: " + str(overflow))
+
+            # Plot initial photons:
+            yi = self.ei_array/self.energy_bin_widths
+            yerr = np.sqrt(self.ei_array)/self.energy_bin_widths
+            plt.loglog(self.emean, yi,ls="-", marker="o", color="black",label="Initial Photons")
+            plt.errorbar(self.emean, yi, yerr=yerr, ls="-", marker="o", color="black")
+
+            # Plot measured photon:
+            ym = self.em_array/self.energy_bin_widths
+            yerr = np.sqrt(self.em_array)/self.energy_bin_widths
+            plt.loglog(self.emean, ym,ls="-", marker="s", color="cornflowerblue")
+            plt.errorbar(self.emean, ym, yerr=yerr, ls="-", marker="s", color="cornflowerblue", label="Measured Photons")
+
+            plt.ylim(np.amax(yi)*0.1,np.amax(yi)*10)
+            plt.xlim(1e1,1e4)
+            plt.xlabel("Energy [keV]")
+            plt.ylabel("dN/dE [ph/keV]")
+            plt.grid(ls="--",color="grey",alpha=0.3)
+            plt.legend(frameon=False)
+            plt.savefig("energy_dist.png")    
+            plt.show()
+            plt.close()
+
+            # Print number of starting and measured photons as sanity check:
+            print()
+            print("Number of starting photons: " + str(self.ei_array.sum()))
+            print("Number of measured photons: " + str(self.em_array.sum()))
+            print()
+             
         return
    
     def load_response(self, name):
@@ -904,6 +966,45 @@ class ProcessSpherical(ProcessSims.Process):
                 sys.exit()
     
         return theta_index
+
+    def get_energy_bin(self,energy,rsp_file=None):
+
+        """Returns index of the energy bin.
+        
+        Parameters
+        ----------
+        energy : float
+            Energy in keV.
+        rsp_file : str, optional
+            Prefix of response file to load.
+
+        Returns
+        -------
+        energy_index : int
+            Index of energy bin. 
+        """
+       
+        # Make sure response is loaded:
+        if rsp_file != None:
+            self.load_response(rsp_file)
+        try:
+            self.incident_ang_bins
+        except:
+            print("ERROR: Need to specify response file.")
+            sys.exit()
+
+        # Find bin index:
+        for i in range(0,len(self.energy_bin_edges)):
+            try:
+                if (energy >= self.energy_bin_edges[i]) & (energy < self.energy_bin_edges[i+1]):
+                    energy_index = i
+                    break
+            except: 
+                print("ERROR: energy not found.")
+                sys.exit()
+    
+        return energy_index
+
 
     def normalize_response(self):
 
