@@ -700,18 +700,18 @@ class Process:
 
         """Plot energy dispersion matrix."""
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(7.5,6))
         ax = plt.gca()
         img = ax.pcolormesh(self.energy_bin_edges, self.energy_bin_edges, matrix, cmap="viridis")
         ax.set_xscale('log')
         ax.set_yscale('log')
         cbar = plt.colorbar(img,fraction=0.045)
-        cbar.set_label("Detection Fraction", fontsize=12)
+        cbar.set_label("Ratio", fontsize=14)
         plt.xlabel("Ei [keV]", fontsize=14)
         plt.ylabel("Em [keV]", fontsize=14)
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
-        plt.savefig(savefile)
+        plt.savefig(savefile,dpi=600)
         plt.show()
         plt.close()
 
