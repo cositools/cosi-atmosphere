@@ -19,7 +19,7 @@ DefaultRangeCut 100
 
 Run SpaceSim
 SpaceSim.FileName         Atmosphere_Isotropic
-SpaceSim.Triggers         1000
+SpaceSim.Triggers         100
 
 SpaceSim.Source Beam
 Beam.ParticleType           1
