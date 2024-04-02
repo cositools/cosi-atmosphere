@@ -26,8 +26,6 @@ class ProcessSpherical(ProcessSims.Process):
         
     Parameters
     ----------
-    theta : float 
-        Incident angle in degrees. 
     r_alt : float 
         Altitude of observations in km. 
     all_events_file : str, optional 
@@ -38,7 +36,7 @@ class ProcessSpherical(ProcessSims.Process):
         from ParseSims method).  
     """
 
-    def __init__(self, theta, r_alt, all_events_file="all_thrown_events.dat", \
+    def __init__(self, r_alt, all_events_file="all_thrown_events.dat", \
             measured_events_file="event_list.dat"):
      
         # Get test directory:
@@ -120,9 +118,6 @@ class ProcessSpherical(ProcessSims.Process):
 
         # Get incident angle for initial photons:
         self.incident_angle_i = self.angle(vi,ni)*(180/np.pi) # degrees
-
-        # Incident angle in degrees:
-        self.theta = theta
 
         print()
         print("Total number of initial events: " + str(len(self.idi[:])))
