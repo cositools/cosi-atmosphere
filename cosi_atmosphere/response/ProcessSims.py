@@ -817,6 +817,13 @@ class Process:
             Option to plot correction factor and ratio.
         """
 
+        # Need to make sure response is laoded:
+        try:
+            self.normed_edisp_array_total
+        except:
+            print("ERROR: Need to get energy dispersion matrices.")
+            sys.exit() 
+            
         # Get integrated counts for each energy bin:
         N_list = []
         for i in range(0,len(self.energy_bin_edges)-1):
