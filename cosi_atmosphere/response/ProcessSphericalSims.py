@@ -743,7 +743,7 @@ class ProcessSpherical(ProcessSims.Process):
 
             # Plot fraction:
             ang_bins = np.array(self.incident_ang_bins)
-            theta_distributions.pdf
+
             # Note: Need to avoid overflow bin, so we take len(ang_bins) - 1:
             frac = (theta_m[0:len(ang_bins)-1]/theta_i[0:len(ang_bins)-1])
             plt.plot(ang_bins[0:len(ang_bins)-1],frac,ls="--",marker="o",color="black")

@@ -24,7 +24,7 @@ class MakeMassModels:
  
         # Get test directory:
         path_prefix = os.path.split(MassModels.__file__)[0]
-        self.test_dir = os.path.join(path_prefix,"test_files")
+        self.test_dir = os.path.join(path_prefix,"data_files")
         
         df = pd.read_csv(atmosphere_file, delim_whitespace=True, **kwargs)
 
