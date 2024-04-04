@@ -85,7 +85,7 @@ class Simulate:
 
             #check if it is compressed file or not            
             if filename.strip().endswith(".gz") :
-                f = gzip.open(filename.strip(),"r")
+                f = gzip.open(filename.strip(),"rb")
 
             else :
                 f = open(filename.strip(),"r")
@@ -130,7 +130,7 @@ class Simulate:
                
                 elif "IA ENTR" in init_line[0] and get_events:
                 
-                        id_list.append(int(this_id))
+                        id_list.append(int(this_id)+nb*nbSimEventperFile)
                         em_list.append(float(init_line[14]))
                         xm.append(float(init_line[4]))
                         ym.append(float(init_line[5]))
