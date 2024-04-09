@@ -288,7 +288,8 @@ class ProcessSpherical(ProcessSims.Process):
         return intersection
 
     def bin_sim(self, name, elow=10, ehigh=10000, num_ebins=17, \
-            anglow=0, anghigh=100, num_angbins=26,  nside=16, scheme='ring'):
+            anglow=0, anghigh=100, num_angbins=26,  nside=16, \
+            scheme='ring', weighted=True):
 
         """Bins the simulations, and writes output files 
         for both starting and measured photons. 
@@ -317,16 +318,18 @@ class ProcessSpherical(ProcessSims.Process):
             nside for healpix binning (defualt is 16).
         scheme : str, optional 
             Scheme for healpix binning (ring or nested). Default is ring.
-        
+        weighted : bool, optional
+            Wether or nor to use a weighted histogram (default is True).
+
         Note
         ----
-        Response file contains 5 different histograms, each stored as 
+        | Response file contains 5 different histograms, each stored as 
         its own group. The group names are:
-        1. primary_rsp
-        2. starting_photons
-        3. starting_photons_rsp
-        4. measured_photons
-        5. measured_photons_rsp
+        | 1. primary_rsp
+        | 2. starting_photons
+        | 3. starting_pe, ons_rsp
+        | 4. measured_photons
+        | 5. measured_photons_rsp
         """
         
         # Define energy bin edges: 
@@ -401,9 +404,13 @@ class ProcessSpherical(ProcessSims.Process):
         self.primary_rsp = Histogram([self.energy_bin_edges, self.energy_bin_edges,\
                 self.incident_ang_bins, self.incident_ang_bins],\
                 labels=["Ei [keV]", "Em [keV]", "theta_i [deg]", "theta_m [deg]"], sparse=True)
-        self.primary_rsp.fill(self.ei[keep_index], self.em, \
+        if weighted == True:
+            self.primary_rsp.fill(self.ei[keep_index], self.em, \
                 self.incident_angle_i[keep_index], self.incident_angle_m, \
                 weight=np.cos(np.deg2rad(self.incident_angle_i[keep_index]))/np.cos(np.deg2rad(self.incident_angle_m)))
+        if weighted == False:
+            self.primary_rsp.fill(self.ei[keep_index], self.em, \
+                self.incident_angle_i[keep_index], self.incident_angle_m)
 
         # Write response to file:
         savefile = name 
@@ -1050,7 +1057,7 @@ class ProcessSpherical(ProcessSims.Process):
             # Sum over all measured angles except source incident angle and 90 degrees:
             counter = 0
             for i in range(0,len(self.incident_ang_centers)):
-                if (i != theta_bin) & (i != deg90_bin):
+                if (i != theta_bin) & (i < deg90_bin):
                     if counter == 0:
                         this_edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, 
                             "theta_m [deg]":i}].project(["Em [keV]", "Ei [keV]"]).contents

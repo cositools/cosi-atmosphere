@@ -175,10 +175,8 @@ class Process:
         
         return angle
 
-    def bin_sim(self, elow=10, ehigh=10000, num_ebins=24,\
-            rlow=1e-7, rhigh=1000, num_rbins=120, 
-            starting_ph_output='starting_photons.hdf5',
-            measured_ph_output='measured_photons.hdf5'):
+    def bin_sim(self, rsp_name, elow=10, ehigh=10000, num_ebins=24,\
+            rlow=1e-7, rhigh=1000, num_rbins=120):
 
         """Bins the simulations, and writes output files 
         for both starting and measured photons. 
@@ -189,6 +187,8 @@ class Process:
         
         Parameters
         ---------
+        rsp_name : str
+            Name of output response file (use .hdf5 or .h5 extension). 
         elow : float, optional
             Lower energy bound in keV (defualt is 10 keV). 
         ehigh : float, optional 
@@ -202,12 +202,15 @@ class Process:
             Upper radial bound in km (default is 1000).
         num_rbins : int, optional
             Number of radial bins to use (default is 120).
-        starting_ph_output : str, optional
-            Name of output file for starting photons binned histogram 
-            (default is 'starting_photons.hdf5'). 
-        measured_ph_output : str, optional
-            Name of output file for measured photons binned histogram
-            (default is 'measured_photons.hdf5'). 
+        
+        Note
+        ----
+        | Response file contains 4 different histograms, each stored 
+        as it's own group. The group names are:
+        | 1. starting photons
+        | 2. measured_photons_baseline
+        | 3. measured_photons
+        | 4. rsp_main
         """
         
         # Define energy bin edges:
@@ -240,7 +243,7 @@ class Process:
                 self.xyi_bins, self.xyi_bins], \
                 labels=["Ei [keV]", "ri [km]", "xi [cm]", "yi [cm]"])
         self.starting_photons.fill(self.ei, self.ri, self.xi, self.yi)
-        self.starting_photons.write(starting_ph_output, overwrite=True)
+        self.starting_photons.write(rsp_name, name="starting_photons", overwrite=True)
 
         # Make un-weighted histogram,
         # used for comparison.
@@ -248,7 +251,7 @@ class Process:
                 self.xym_bins, self.xym_bins, self.incident_ang_bins],\
                 labels=["Em [keV]", "rm [km]", "xm [cm]", "ym [cm]", "theta_prime [deg]"])
         self.measured_photons_baseline.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle)
-        self.measured_photons_baseline.write(measured_ph_output, overwrite=True)
+        self.measured_photons_baseline.write(rsp_name, name="measured_photons_baseline", overwrite=True)
         
         # Make weighted histogram.
         self.measured_photons = Histogram([self.energy_bin_edges, self.radial_bins, \
@@ -256,7 +259,19 @@ class Process:
                 labels=["Em [keV]", "rm [km]", "xm [cm]", "ym [cm]", "theta_prime [deg]"])
         self.measured_photons.fill(self.em, self.rm, self.xm, self.ym, self.incident_angle, 
                 weight=np.cos(np.deg2rad(self.theta))/np.cos(np.deg2rad(self.incident_angle)))
-        self.measured_photons.write(measured_ph_output, overwrite=True)
+        self.measured_photons.write(rsp_name, name="measured_photons", overwrite=True)
+
+        # Make main response:
+        condition = self.incident_angle<88
+        idm_watch = self.idm[condition]
+        em_watch = self.em[condition]
+        ia_watch = self.incident_angle[condition]
+        transmitted_index = np.isin(self.idi, idm_watch)
+        self.rsp_main = Histogram([self.energy_bin_edges, self.energy_bin_edges, self.incident_ang_bins],\
+                labels=["Ei [keV]", "Em [keV]", "theta_prime [deg]"])
+        self.rsp_main.fill(self.ei[transmitted_index], em_watch, ia_watch, \
+                 weight=np.cos(np.deg2rad(self.theta))/np.cos(np.deg2rad(ia_watch)))
+        self.rsp_main.write(rsp_name, name="rsp_main", overwrite=True)
 
         # Get binning info:
         self.get_binning_info()
@@ -267,10 +282,13 @@ class Process:
 
         """Get info from histogram."""
 
+        self.energy_bin_edges = self.starting_photons.axes["Ei [keV]"].edges
         self.energy_bin_centers = self.starting_photons.axes["Ei [keV]"].centers
         self.energy_bin_widths = self.starting_photons.axes["Ei [keV]"].widths
         self.radial_bin_centers = self.measured_photons.axes["rm [km]"].centers
         self.radial_bin_widths = self.measured_photons.axes["rm [km]"].widths
+        self.radial_bins = self.measured_photons.axes["rm [km]"].edges 
+        self.incident_ang_bins = self.measured_photons.axes["theta_prime [deg]"].edges
 
         # Get mean energy:
         emean_list = []
@@ -289,31 +307,29 @@ class Process:
 
         return
 
-    def load_response(self, starting_ph_file="starting_photons.hdf5",\
-            measured_ph_file="measured_photons.hdf5"):
+    def load_response(self, name):
 
         """Load response files for starting and measured photons.
 
         Parameters
         ----------
-        starting_ph_file : str, optional 
-            Binned histogram for staring photons (default is 'starting_photons.hdf5').
-        measured_ph_file : str, optional 
-            Binned histogram for measured photons (default is 'measured_photons.hdf5').
-        
-        Note
-        ----
-        Default photon files are the output from the bin_sim method.
+        name : str
+            Name of response file.
         """
         
-        self.starting_photons = Histogram.open(starting_ph_file)
-        self.measured_photons = Histogram.open(measured_ph_file)
+        savefile = name
+        self.starting_photons = Histogram.open(savefile, name="starting_photons")
+        self.measured_photons = Histogram.open(savefile, name="measured_photons")
+        self.measured_photons_baseline = Histogram.open(savefile, name="measured_photons_baseline")
+        self.rsp_main = Histogram.open(savefile, name="rsp_main")
+        self.get_binning_info()
 
         return
 
     def make_scattering_plots(self, starting_pos=True, measured_pos=True, \
             spec_i=True, radial_dist=True, theta_prime = True, \
-            theta_prime_em = True, rad_em = True, rad_ei = True, show_baseline = True):
+            theta_prime_em = True, rad_em = True, rad_ei = True, \
+            show_baseline = True, rsp_file=None):
 
         """Visualize the photon scattering.
         
@@ -337,7 +353,18 @@ class Process:
             Radial distribution versus initial energy.
         show_baseline : bool, optional
             Option to show angular comparison to un-weighted histogram. 
+        rsp_file : str, optional
+            Option to give name of response file to be loaded (default is None). 
         """
+
+        # Make sure response is loaded:
+        if rsp_file != None:
+            self.load_response(rsp_file)
+        try:
+            self.measured_photons
+        except:
+            print("ERROR: Need to load response file.")
+            sys.exit()
 
         # Define condition for unscattered photons:
         theta_low = self.theta - 0.2
@@ -356,10 +383,10 @@ class Process:
         # Measured position:
         if measured_pos == True:
             plt.scatter(self.xm, self.ym, color="cornflowerblue", label="measured (all)")
+            plt.scatter(self.xm[condition], self.ym[condition], color="black", label="measured (transmitted)")
             plt.scatter(self.xi, self.yi, color="darkorange", label="starting")
-            plt.scatter(self.xm[condition], self.ym[condition], color="black", label="measured (beam)")
-            plt.xlabel("x [cm]")
-            plt.ylabel("y [cm]")
+            plt.xlabel("x [cm]", fontsize=14)
+            plt.ylabel("y [cm]", fontsize=14)
             plt.savefig("dist_measured.png")
             plt.show()
             plt.close()
@@ -402,9 +429,9 @@ class Process:
             total = np.sum(self.rm_array)
             ax1.loglog(self.radial_bin_centers, self.rm_array/(area), color="cornflowerblue")
             ax2.loglog(self.radial_bin_centers, self.rm_array, ls="--", color="darkorange", zorder=0)
-            ax1.set_ylabel("counts/area", color="cornflowerblue")
-            ax2.set_ylabel("counts", color="darkorange")
-            ax1.set_xlabel("rm [km]")
+            ax1.set_ylabel("counts/area", color="cornflowerblue", fontsize=14)
+            ax2.set_ylabel("counts", color="darkorange", fontsize=14)
+            ax1.set_xlabel("rm [km]", fontsize=14)
             plt.grid(ls=":",color="grey",alpha=0.3)
             plt.savefig("rdist.png")    
             plt.show()
@@ -414,15 +441,16 @@ class Process:
         if theta_prime == True:
             if show_baseline == True:
                 dist = self.measured_photons_baseline.project("theta_prime [deg]").contents
-                plt.plot(self.incident_ang_bins[1:],dist,color="blue",label="true")
+                plt.plot(self.incident_ang_bins[1:],dist,marker='o',color="blue",label="un-weighted")
             dist = self.measured_photons.project("theta_prime [deg]").contents
-            plt.plot(self.incident_ang_bins[1:],dist,color="red",label=r"scaled by cos($\theta_i$)/cos($\theta_m$)")
+            plt.plot(self.incident_ang_bins[1:],dist,marker='o',color="red",label=r"weighted by cos($\theta_i$)/cos($\theta_m$)")
             plt.yscale("log")
-            plt.ylabel("counts")
-            plt.xlabel(r"$\theta$")
+            plt.ylabel("counts", fontsize=14)
+            plt.xlabel(r"$\theta_\mathrm{m} [\circ]$", fontsize=14)
             plt.xlim(0,100)
+            plt.ylim(1,1e7)
             plt.grid(ls="--",color="grey",alpha=0.3)
-            plt.legend(loc=1)
+            plt.legend(loc=3)
             plt.savefig("theta_prime_dist.png")    
             plt.show()
             plt.close()
@@ -568,7 +596,7 @@ class Process:
         
         return tp_energy, tp_array[return_index]
 
-    def get_total_edisp_matrix(self, show_sanity_checks=False, make_plots=True):
+    def get_total_edisp_matrix(self, show_sanity_checks=False, make_plots=True, tp_file=None):
 
         """Get the energy dispersion matrix. 
         
@@ -585,6 +613,9 @@ class Process:
             probability, to verify that they are the same (default is False). 
         make_plots : bool, optional 
             Show plots (default is True). 
+        tp_file : str, optional
+            Option to overlay TP from analytical calculation in plot.
+            Specify file name from TPCalc class. Default is None.
         """
         
         # Define condition for beam and scattered component:
@@ -621,7 +652,7 @@ class Process:
         ia_watch = self.incident_angle[condition]
         self.edisp_array_total, \
         self.normed_edisp_array_total,\
-        self.tp_total = self.make_edisp_matrix(idm_watch, em_watch, ia_watch, write_hist=True)
+        self.tp_total = self.make_edisp_matrix(idm_watch, em_watch, ia_watch)
 
         # Calculate total as sum of beam and scattered (sanity check):
         self.normed_edisp_array_summed = \
@@ -647,11 +678,11 @@ class Process:
             self.plot_edisp_matrix(self.normed_edisp_array_total, "edisp_matrix_total.png")
        
             # Plot transmission probability:
-            self.plot_tp_from_edisp()
+            self.plot_tp_from_edisp(tp_file=tp_file)
 
         return
 
-    def make_edisp_matrix(self, idm_watch, em_watch, ia_watch, write_hist=False):
+    def make_edisp_matrix(self, idm_watch, em_watch, ia_watch):
 
         """Make energy dispersion matrix.
 
@@ -663,20 +694,15 @@ class Process:
             Energy histogram of photons for watched region.
         ia_watch : ArrayLike
             Angle histogram of photons for watched region. 
-        write_hist : bool
-            Option to save histogram to hdf5.
         """
 
         # Make edisp array:
         transmitted_index = np.isin(self.idi, idm_watch)
         transmitted_events = Histogram([self.energy_bin_edges, self.energy_bin_edges, self.incident_ang_bins],\
                 labels=["Ei [keV]", "Em [keV]", "theta_prime [deg]"])
-        transmitted_events.fill(self.ei[transmitted_index], em_watch, ia_watch)
-         
-        # Save response matrix:
-        if write_hist == True:
-            transmitted_events.write('atm_response.hdf5', overwrite=True)
-        
+        transmitted_events.fill(self.ei[transmitted_index], em_watch, ia_watch, \
+                 weight=np.cos(np.deg2rad(self.theta))/np.cos(np.deg2rad(ia_watch)))
+          
         # Project onto em, ei:
         self.edisp_array = np.array(transmitted_events.project(["Em [keV]", "Ei [keV]"]))
         
@@ -727,12 +753,7 @@ class Process:
             Option to overlay TP from analytical calculation in plot. 
             Specify file name from TPCalc class. Default is None. 
         """
-        
-        # Get original TP 
-        # Sanity check for now. Can probably remove soon. 
-        #e_official, tp_official = self.get_tp_from_file()
-        #plt.semilogx(e_official, tp_official, marker="", ls="-", color="black", label="original")
-
+    
         # Plot TP:
         plt.semilogx(self.emean, self.tp_total, marker="o", ls="--", label="Total")
         plt.semilogx(self.emean, self.tp_beam, marker="s", ls="-", label="Transmitted")
