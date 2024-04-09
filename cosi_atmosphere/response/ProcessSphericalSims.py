@@ -323,13 +323,13 @@ class ProcessSpherical(ProcessSims.Process):
 
         Note
         ----
-        | Response file contains 5 different histograms, each stored as 
+        Response file contains 5 different histograms, each stored as 
         its own group. The group names are:
-        | 1. primary_rsp
-        | 2. starting_photons
-        | 3. starting_pe, ons_rsp
-        | 4. measured_photons
-        | 5. measured_photons_rsp
+        1. primary_rsp
+        2. starting_photons
+        3. starting_pe, ons_rsp
+        4. measured_photons
+        5. measured_photons_rsp
         """
         
         # Define energy bin edges: 
@@ -875,7 +875,7 @@ class ProcessSpherical(ProcessSims.Process):
         Parameters
         ----------
         theta : float
-            Incident angle of source. 
+            Incident angle of source in degrees. 
         make_plots : bool, optional 
             Show plots (default is True).
         rsp_file : str, optional 
@@ -1022,8 +1022,18 @@ class ProcessSpherical(ProcessSims.Process):
         print(np.sum(N))
         print()
 
-        # Set 0 bins to arbitrary large number to avoid division by 0:
-        N[N==0] = 1e12
+        # Check statistics:
+        bad_stats = N < 5
+        Nbad = len(N[bad_stats]) 
+        if Nbad != 0:
+            print()
+            print("WARNING: Number of normalization bins with counts < 5: %s" %Nbad)
+            print("Make sure you have appropriate statistics!")
+            print("Check normalization matrix: self.starting_photons_rsp.contents.todense()")
+            print()
+
+        # Set 0 bins to arbitrary small number to avoid division by 0:
+        N[N==0] = 1e-12
         
         # Normalize:
         self.primary_rsp = self.primary_rsp.todense() / N[:,None,:,None]
