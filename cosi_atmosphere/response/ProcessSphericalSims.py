@@ -119,6 +119,9 @@ class ProcessSpherical(ProcessSims.Process):
         # Get incident angle for initial photons:
         self.incident_angle_i = self.angle(vi,ni)*(180/np.pi) # degrees
 
+        # Define delta theta:
+        self.delta_theta = self.angle(vi[keep_index],vm)*(180/np.pi) # degrees 
+
         print()
         print("Total number of initial events: " + str(len(self.idi[:])))
         print("Total number of unmeasured events: " + str(len(self.idi[~keep_index])))
@@ -422,7 +425,7 @@ class ProcessSpherical(ProcessSims.Process):
         
         # Get binning info:
         self.get_binning_info()
-
+ 
         return
 
     def get_binning_info(self):
@@ -1039,7 +1042,7 @@ class ProcessSpherical(ProcessSims.Process):
         self.primary_rsp = self.primary_rsp.todense() / N[:,None,:,None]
          
         return
-    
+   
     def make_edisp_matrix(self, theta_bin, comp="total"):
 
         """Make energy dispersion matrix.
@@ -1072,11 +1075,11 @@ class ProcessSpherical(ProcessSims.Process):
                         this_edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, 
                             "theta_m [deg]":i}].project(["Em [keV]", "Ei [keV]"]).contents
                         self.edisp_array = np.array(this_edisp_array) 
-                        counter += 1
                     if counter != 0:
                         this_edisp_array = self.primary_rsp.slice[{"theta_i [deg]":theta_bin, 
                             "theta_m [deg]":i}].project(["Em [keV]", "Ei [keV]"]).contents
                         self.edisp_array += np.array(this_edisp_array) 
+                    counter += 1
 
         if comp == "total":
             self.edisp_array = self.normed_edisp_array_beam + self.normed_edisp_array_scattered

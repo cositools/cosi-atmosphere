@@ -205,12 +205,12 @@ class Process:
         
         Note
         ----
-        | Response file contains 4 different histograms, each stored 
+        Response file contains 4 different histograms, each stored 
         as it's own group. The group names are:
-        | 1. starting photons
-        | 2. measured_photons_baseline
-        | 3. measured_photons
-        | 4. rsp_main
+        1. starting photons
+        2. measured_photons_baseline
+        3. measured_photons
+        4. rsp_main
         """
         
         # Define energy bin edges:
