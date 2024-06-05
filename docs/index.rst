@@ -18,8 +18,9 @@ Getting Help
 ------------
 For problems with the code please open an issue in github. For further assistance, please email Chris Karwin at christopher.m.karwin@nasa.gov. 
 
-.. warning::
-   The cosi-atmosphere package is still actively under development. Note that the current releases are not stable and various components can be modified or deprecated shortly.
+Reference
+---------
+Please cite Karwin+24 if you make use of this library in a publication. 
 
 Contributing
 ------------
