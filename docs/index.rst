@@ -32,3 +32,4 @@ This library is open source and anyone can contribute. If you have code you woul
    install
    tutorials/index
    api/index
+   data_products
