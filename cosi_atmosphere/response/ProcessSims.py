@@ -382,8 +382,10 @@ class Process:
 
         # Measured position:
         if measured_pos == True:
-            plt.scatter(self.xm, self.ym, color="cornflowerblue", label="measured (all)")
-            plt.scatter(self.xm[condition], self.ym[condition], color="black", label="measured (transmitted)")
+
+            plt.scatter(self.xm, self.ym, color="cornflowerblue", alpha=1, label="measured (all)")
+            plt.scatter(self.xm[condition], self.ym[condition], s=1, \
+                    color="black", alpha=0.05, label="measured (transmitted)")      
             plt.scatter(self.xi, self.yi, color="darkorange", label="starting")
             plt.xlabel("x [cm]", fontsize=14)
             plt.ylabel("y [cm]", fontsize=14)
