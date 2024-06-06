@@ -11,5 +11,6 @@ Precomputed atmospheric response matrices are available for altitudes between 25
 The general file name is atm_response_[alt]p5km.hdf5, where [alt] should be replaced by an integer value between 25 - 45. 
 
 Change in the dection fraction with altitude:
-.. image:: images/TPprob_alt_variation.gif
+
+.. image:: /images/TPprob_alt_variation.gif
 
