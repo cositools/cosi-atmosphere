@@ -12,18 +12,25 @@ The general file name is atm_response_[alt]p5km.hdf5, where [alt] should be repl
 
 Change in the dection fraction with altitude:
 
-.. image:: /images/TPprob_alt_variation.gif
-        :width: 30%
+.. figure:: /images/Edispmatrix_total_alt_variation.gif
+        :width: 33%
+        :class: no-scaled-link
+        
+        Total
+
+.. figure:: /images/Edispmatrix_beam_alt_variation.gif
+        :width: 33%
         :class: no-scaled-link
 
-.. image:: /images/TPprob_alt_variation.gif
-        :width: 30%
+        Transmitted
+
+.. figure:: /images/Edispmatrix_scattered_alt_variation.gif
+        :width: 33%
         :class: no-scaled-link
 
-.. image:: /images/TPprob_alt_variation.gif
-        :width: 30%
-        :class: no-scaled-link
+        Scattered
 
-.. image:: /images/TPprob_alt_variation.gif
+.. figure:: /images/TPprob_alt_variation.gif
         :width: 50%
+        :align: center
         :class: no-scaled-link
