@@ -10,18 +10,18 @@ Precomputed atmospheric response matrices are available for altitudes between 25
 
 The general file name is atm_response_[alt]p5km.hdf5, where [alt] should be replaced by an integer value between 25 - 40. 
 
-Change in the energy dispersion matrices and dection fraction with altitude:
+Below is the change in the energy dispersion matrices with altitude for the total (left), transmitted (middle), and scattered (right) components, as well as the change in the dection fraction (second row):
 
 .. image:: /images/Edispmatrix_total_alt_variation.gif
-        :width: 25%
+        :width: 33.3%
         :class: no-scaled-link
 
 .. image:: /images/Edispmatrix_beam_alt_variation.gif
-        :width: 25%
+        :width: 33.3%
         :class: no-scaled-link
 
 .. image:: /images/Edispmatrix_scattered_alt_variation.gif
-        :width: 25%
+        :width: 33.3%
         :class: no-scaled-link
 
 .. image:: /images/TPprob_alt_variation.gif
