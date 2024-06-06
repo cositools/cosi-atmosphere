@@ -16,19 +16,13 @@ Change in the dection fraction with altitude:
         :width: 33%
         :class: no-scaled-link
         
-        Total
-
 .. figure:: /images/Edispmatrix_beam_alt_variation.gif
         :width: 33%
         :class: no-scaled-link
 
-        Transmitted
-
 .. figure:: /images/Edispmatrix_scattered_alt_variation.gif
         :width: 33%
         :class: no-scaled-link
-
-        Scattered
 
 .. figure:: /images/TPprob_alt_variation.gif
         :width: 50%
