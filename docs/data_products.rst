@@ -13,15 +13,15 @@ The general file name is atm_response_[alt]p5km.hdf5, where [alt] should be repl
 Below is the change in the energy dispersion matrices with altitude for the total (left), transmitted (middle), and scattered (right) components, as well as the change in the dection fraction (second row):
 
 .. image:: /images/Edispmatrix_total_alt_variation.gif
-        :width: 33.3%
+        :width: 33%
         :class: no-scaled-link
 
 .. image:: /images/Edispmatrix_beam_alt_variation.gif
-        :width: 33.3%
+        :width: 33%
         :class: no-scaled-link
 
 .. image:: /images/Edispmatrix_scattered_alt_variation.gif
-        :width: 33.3%
+        :width: 33%
         :class: no-scaled-link
 
 .. image:: /images/TPprob_alt_variation.gif
