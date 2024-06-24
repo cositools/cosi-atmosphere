@@ -18,9 +18,9 @@ Getting Help
 ------------
 For problems with the code please open an issue in github. For further assistance, please email Chris Karwin at christopher.m.karwin@nasa.gov. 
 
-Reference
+Citing
 ---------
-Please cite Karwin+24 if you make use of this library in a publication. 
+Please cite `Karwin+24 <https://arxiv.org/abs/2406.03534>`_ if you make use of this library in a publication. 
 
 Contributing
 ------------
