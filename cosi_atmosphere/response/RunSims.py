@@ -7,6 +7,7 @@ import colorcet as cc
 from histpy import Histogram
 import gc 
 from astropy.convolution import convolve, Gaussian2DKernel
+import gzip
 
 class Simulate:
  
@@ -64,7 +65,11 @@ class Simulate:
         ydm = []
         zdm = []
 
-        f = open(sim_file,"r")
+        if sim_file.endswith(".gz") :
+            f = gzip.open(sim_file.strip(),"rt")
+        
+        else: 
+            f = open(sim_file,"r")
 
         i = 0
         while True:
@@ -148,7 +153,7 @@ class Simulate:
     def parse_sim_file_all_info(self, sim_file, unique=True):
 
         """Parse sim file with StoreSimulationInfo = all. This also 
-        returns the sequence of interactions for each photon. 
+        returns the sequence of interactions for each measured photon. 
 
         Parameters
         ----------
@@ -205,7 +210,11 @@ class Simulate:
         zdm = []
         seq = []
 
-        f = open(sim_file,"r")
+        if sim_file.endswith(".gz") :
+            f = gzip.open(sim_file,"rt")
+        
+        else: 
+            f = open(sim_file,"r")
 
         i = 0
         while True:
