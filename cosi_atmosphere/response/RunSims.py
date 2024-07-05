@@ -3,7 +3,6 @@ import pandas as pd
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import colorcet as cc
 from histpy import Histogram
 import gc 
 from astropy.convolution import convolve, Gaussian2DKernel
