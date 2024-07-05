@@ -171,14 +171,14 @@ class Simulate:
         sequence of interactions is stored as a string in the parsed event 
         file, encoded as follows:
 
-        S: start
-        C: Compton event
-        B: Bremsstrahlung event
-        A: Photo electric absorption
-        R: Rayliegh scattering 
-        P: Pair production
-        X: Pair annihilation
-        I: Entered watched volume
+        S: start,
+        C: Compton event,
+        B: Bremsstrahlung event,
+        A: Photo electric absorption,
+        R: Rayliegh scattering,
+        P: Pair production,
+        X: Pair annihilation,
+        I: Entered watched volume.
 
         In the default mode, we only consider the first time a photon
         crosses the watched volume. If considering multiple crossings, 
