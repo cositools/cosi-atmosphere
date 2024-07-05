@@ -177,7 +177,8 @@ class Simulate:
         B: Bremsstrahlung event
         A: Photo electric absorption
         R: Rayliegh scattering 
-        P: Pair event
+        P: Pair production
+        X: Pair annihilation
         I: Entered watched volume
 
         In the default mode, we only consider the first time a photon
@@ -260,6 +261,8 @@ class Simulate:
                             this_seq += "R"
                         if "IA PAIR" in next_line[0]:
                             this_seq += "P"
+                        if "IA ANNI" in next_line[0]:
+                            this_seq += "X"
 
                         if "IA ENTR" in next_line[0]:
                
@@ -354,10 +357,12 @@ class Simulate:
         n_a = np.char.count(seq,"A")
         n_r = np.char.count(seq,"R")
         n_p = np.char.count(seq,"P") 
+        n_x = np.char.count(seq,"X")
 
         # Need to divide pair events by 2, since each event has 2 entries:
         n_p = n_p / 2.0
-        
+        n_x = n_x / 2.0
+
         # Define energy bin edges: 
         energy_bin_edges = np.logspace(np.log10(elow), np.log10(ehigh), num_ebins) 
 
@@ -370,9 +375,10 @@ class Simulate:
         brem = {"array":n_b,"title":"Bremsstrahlung"}
         phot = {"array":n_a,"title":"Photo Absorption"}
         rayl = {"array":n_r,"title":"Rayliegh Scattering"}
-        pair = {"array":n_p,"title":"Pair Conversion"}
+        pair = {"array":n_p,"title":"Pair Production"}
+        anni = {"array":n_x,"title":"Pair Annihilation"}
 
-        plot_list = [tot,compton,brem,phot,rayl,pair]
+        plot_list = [tot,compton,brem,phot,rayl,pair,anni]
 
         # Make plots:
         for each in plot_list:
