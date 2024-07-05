@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 # Setup:
 setup(
     name='cosi_atmosphere',
-    version="0.1.6",
+    version="0.1.7",
     url='https://github.com/cositools/cosi-atmosphere.git',
     author='COSI Team',
     author_email='christopher.m.karwin@nasa.gov',
