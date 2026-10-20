@@ -377,23 +377,23 @@ class ProcessSpherical(ProcessSims.Process):
     
         # Make histogram for starting photons:
         self.starting_photons = Histogram([self.energy_bin_edges, self.radial_bins, self.ang_bin_edges, self.ang_bin_edges], \
-                labels=["Ei [keV]", "ri [km]", "ang_ri_pixs", "ang_di_pixs"], sparse=True)
+                labels=["Ei [keV]", "ri [km]", "ang_ri_pixs", "ang_di_pixs"], sparse=True, track_overflow=True)
         self.starting_photons.fill(self.ei, self.ri, self.ang_pixs_ri, self.ang_pixs_di)
 
         # Make histogram for starting photons response:
         keep_index = np.isin(self.idi,self.idm)
         self.starting_photons_rsp = Histogram([self.energy_bin_edges, self.incident_ang_bins],\
-                labels=["Ei [keV]", "theta_i [deg]"], sparse=True)
+                labels=["Ei [keV]", "theta_i [deg]"], sparse=True, track_overflow=True)
         self.starting_photons_rsp.fill(self.ei, self.incident_angle_i)
 
         # Make histogram for measured photons:
         self.measured_photons = Histogram([self.energy_bin_edges, self.radial_bins, self.ang_bin_edges, self.ang_bin_edges],\
-                labels=["Em [keV]", "rm [km]", "ang_rm_pixs", "ang_dm_pixs" ], sparse=True)
+                labels=["Em [keV]", "rm [km]", "ang_rm_pixs", "ang_dm_pixs" ], sparse=True, track_overflow=True)
         self.measured_photons.fill(self.em, self.rm, self.ang_pixs_rm, self.ang_pixs_dm)
 
         # Make histogram for measured photons response:
         self.measured_photons_rsp = Histogram([self.energy_bin_edges, self.incident_ang_bins],\
-                labels=["Em [keV]", "theta_m [deg]"], sparse=True)
+                labels=["Em [keV]", "theta_m [deg]"], sparse=True, track_overflow=True)
         self.measured_photons_rsp.fill(self.em, self.incident_angle_m)
 
         # Make primary response atmospheric response matric:
@@ -406,7 +406,7 @@ class ProcessSpherical(ProcessSims.Process):
     
         self.primary_rsp = Histogram([self.energy_bin_edges, self.energy_bin_edges,\
                 self.incident_ang_bins, self.incident_ang_bins],\
-                labels=["Ei [keV]", "Em [keV]", "theta_i [deg]", "theta_m [deg]"], sparse=True)
+                labels=["Ei [keV]", "Em [keV]", "theta_i [deg]", "theta_m [deg]"], sparse=True, track_overflow=True)
         if weighted == True:
             self.primary_rsp.fill(self.ei[keep_index], self.em, \
                 self.incident_angle_i[keep_index], self.incident_angle_m, \
